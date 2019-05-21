@@ -1,3 +1,11 @@
+# general
+.DS_STORE
+
+# rust
 /target
 **/*.rs.bk
 Cargo.lock
+
+# editors
+.vscode
+.idea
