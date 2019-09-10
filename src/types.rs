@@ -14,7 +14,7 @@ pub struct CameraConfig {
 
 pub struct Image<'a> {
     pub timestamp: std::time::SystemTime,
-    pub camera: &'a Camera,
+    pub camera: &'a CameraConfig,
     pub pixels: Vec<(u8, u8, u8)>,
 }
 
@@ -24,7 +24,7 @@ pub struct Contour<'a> {
 }
 
 pub struct Target<'a> {
-    pub camera: &'a Camera,
+    pub camera: &'a CameraConfig,
     pub contours: Vec<Contour<'a>>,
     pub theta: f64,
     pub beta: f64,
