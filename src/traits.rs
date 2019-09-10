@@ -1,9 +1,11 @@
 use crate::types::*;
+use std::io;
+use std::error::Error;
 
 pub trait Camera {
-    fn calibrate(&self);
     fn config(&self) -> CameraConfig;
-    fn grab_frame(&self) -> Image;
+    fn calibrate(&self) -> io::Result<()>;
+    fn grab_frame(&self) -> io::Result<Image>;
 }
 
 pub trait ContourExtractor {
