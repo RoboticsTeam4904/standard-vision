@@ -5,7 +5,7 @@ pub struct Pose {
     pub angle: f64,
 }
 
-pub struct Camera {
+pub struct CameraConfig {
     pub id: u8,
     pub resolution: (u32, u32),
     pub pose: Pose,
@@ -13,6 +13,7 @@ pub struct Camera {
 }
 
 pub struct Image<'a> {
+    pub timestamp: std::time::SystemTime,
     pub camera: &'a Camera,
     pub pixels: Vec<(u8, u8, u8)>,
 }
