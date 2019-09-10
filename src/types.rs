@@ -15,7 +15,13 @@ pub struct CameraConfig {
 pub struct Image<'a> {
     pub timestamp: std::time::SystemTime,
     pub camera: &'a CameraConfig,
-    pub pixels: Vec<(u8, u8, u8)>,
+    pub pixels: Vec<[u8; 3]>,
+}
+
+impl<'a> Image<'a> {
+    pub fn get(&self, y: usize, x: usize) -> [u8; 3] {
+        self.pixels[y * self.camera.resolution.0 as usize + x]
+    }
 }
 
 pub struct Contour<'a> {
