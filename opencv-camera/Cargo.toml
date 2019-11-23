@@ -1,0 +1,9 @@
+[package]
+name = "opencv-camera"
+version = "0.1.0"
+authors = []
+edition = "2018"
+
+[dependencies]
+opencv = { version = "0.21.1", default-features = false, features = ["opencv-41"] }
+standard-vision = { path = "../standard-vision" }

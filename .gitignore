@@ -1,7 +1,7 @@
 # general
-.DS_STORE
+**/.DS_STORE
 
 # rust
-/target
+**/target
 **/*.rs.bk
-Cargo.lock
+**/Cargo.lock
