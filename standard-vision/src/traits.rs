@@ -5,7 +5,7 @@ pub trait Camera {
     fn get_config(&self) -> &CameraConfig;
     fn calibrate(&self) -> io::Result<()> {
         Ok(())
-    };
+    }
     fn grab_frame(&mut self) -> io::Result<Image>;
 }
 
