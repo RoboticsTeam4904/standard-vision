@@ -26,7 +26,7 @@ impl<'a> Image<'a> {
 
 pub struct Contour<'a> {
     pub image: &'a Image<'a>,
-    pub points: Vec<u32>,
+    pub points: Vec<(u32, u32)>,
 }
 
 pub struct Target<'a> {
