@@ -48,6 +48,22 @@ impl OpenCVCamera {
             video_capture,
         })
     }
+
+    pub(crate) fn extract_pixels_from_mat(&self, mat: &Mat) -> Vec<[u8; 3]> {
+        // Expecting 8UC3 Mat type...
+        assert_eq!(mat.typ().unwrap(), core::CV_8UC3);
+
+        let mut pixels = vec![];
+
+        for row_idx in 0..mat.rows().unwrap() {
+            for col_idx in 0..mat.cols().unwrap() {
+                let pixel_vec3b = *mat.at_2d::<core::Vec3b>(row_idx, col_idx).unwrap();
+                pixels.push(*pixel_vec3b);
+            }
+        }
+
+        pixels
+    }
 }
 
 impl Camera for OpenCVCamera {
@@ -67,22 +83,22 @@ impl Camera for OpenCVCamera {
             ));
         }
 
-        // Expecting 8UC3 Mat type...
-        assert_eq!(mat.typ().unwrap(), core::CV_8UC3);
-
-        let mut pixels = vec![];
-
-        for row_idx in 0..mat.rows().unwrap() {
-            for col_idx in 0..mat.cols().unwrap() {
-                let pixel_vec3b = *mat.at_2d::<core::Vec3b>(row_idx, col_idx).unwrap();
-                pixels.push(*pixel_vec3b);
-            }
-        }
+        let pixels = self.extract_pixels_from_mat(&mat);
 
         Ok(Image {
             timestamp: std::time::SystemTime::now(),
             camera: self.get_config(),
             pixels: pixels,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_something() {
+
     }
 }
