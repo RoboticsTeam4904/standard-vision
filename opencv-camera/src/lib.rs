@@ -3,7 +3,7 @@ use std::io;
 use opencv::core;
 use opencv::core::Mat;
 use opencv::videoio::*;
-use standard_vision::traits::{Camera};
+use standard_vision::traits::Camera;
 use standard_vision::types::{CameraConfig, Image, Pose};
 
 pub struct OpenCVCamera {
@@ -18,7 +18,7 @@ impl OpenCVCamera {
         if !video_capture.open_with_backend(index, CAP_ANY).unwrap() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                format!("Failed to open camera on port {}", index)
+                format!("Failed to open camera on port {}", index),
             ));
         }
 
@@ -29,11 +29,11 @@ impl OpenCVCamera {
         video_capture: VideoCapture,
         index: i32,
         pose: Pose,
-        fov: f64
+        fov: f64,
     ) -> io::Result<Self> {
         let resolution = (
             video_capture.get(CAP_PROP_FRAME_WIDTH).unwrap() as u32,
-            video_capture.get(CAP_PROP_FRAME_HEIGHT).unwrap() as u32
+            video_capture.get(CAP_PROP_FRAME_HEIGHT).unwrap() as u32,
         );
 
         let config = CameraConfig {
@@ -79,7 +79,7 @@ impl Camera for OpenCVCamera {
                 format!(
                     "Failed to read frame from camera at port {}",
                     self.config.id
-                )
+                ),
             ));
         }
 
@@ -98,7 +98,5 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_something() {
-
-    }
+    fn test_something() {}
 }
