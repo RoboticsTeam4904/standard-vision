@@ -1,7 +1,10 @@
+#[cfg(test)]
+extern crate png;
+
 use std::io;
 
 use opencv::core;
-use opencv::core::Mat;
+use opencv::prelude::*;
 use opencv::videoio::*;
 use standard_vision::traits::Camera;
 use standard_vision::types::{CameraConfig, Image, Pose};
@@ -49,7 +52,7 @@ impl OpenCVCamera {
         })
     }
 
-    pub(crate) fn extract_pixels_from_mat(&self, mat: &Mat) -> Vec<[u8; 3]> {
+    pub(crate) fn extract_pixels_from_mat(mat: &Mat) -> Vec<[u8; 3]> {
         // Expecting 8UC3 Mat type...
         assert_eq!(mat.typ().unwrap(), core::CV_8UC3);
 
@@ -83,7 +86,7 @@ impl Camera for OpenCVCamera {
             ));
         }
 
-        let pixels = self.extract_pixels_from_mat(&mat);
+        let pixels = Self::extract_pixels_from_mat(&mat);
 
         Ok(Image {
             timestamp: std::time::SystemTime::now(),
@@ -98,5 +101,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_something() {}
+    fn test_mat_pixel_extraction() {
+        use std::fs::File;
+        use opencv::imgcodecs;
+
+        const path: &str = "tests/images/rand.png";
+
+        let decoder = png::Decoder::new(File::open(path).unwrap());
+        let (info, mut reader) = decoder.read_info().unwrap();
+        let mut img_buf = vec![0; info.buffer_size()];
+        reader.next_frame(&mut img_buf).unwrap();
+
+        let expected_pixels = img_buf
+            .chunks_exact(3)
+            .map(|items| { [items[2], items[1], items[0]] })
+            .collect::<Vec<_>>();
+
+        let mat = imgcodecs::imread(path, imgcodecs::IMREAD_COLOR).unwrap();
+
+        let actual_pixels = OpenCVCamera::extract_pixels_from_mat(&mat);
+        assert_eq!(expected_pixels, actual_pixels);
+    }
 }

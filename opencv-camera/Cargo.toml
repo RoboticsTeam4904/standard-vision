@@ -7,3 +7,6 @@ edition = "2018"
 [dependencies]
 opencv = { version = "0.21.1", default-features = false, features = ["opencv-41"] }
 standard-vision = { path = "../standard-vision" }
+
+[dev-dependencies]
+png = "0.15.2"
