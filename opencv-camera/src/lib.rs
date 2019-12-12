@@ -105,9 +105,9 @@ mod tests {
         use std::fs::File;
         use opencv::imgcodecs;
 
-        const path: &str = "tests/images/rand.png";
+        const PATH: &str = "tests/images/rand.png";
 
-        let decoder = png::Decoder::new(File::open(path).unwrap());
+        let decoder = png::Decoder::new(File::open(PATH).unwrap());
         let (info, mut reader) = decoder.read_info().unwrap();
         let mut img_buf = vec![0; info.buffer_size()];
         reader.next_frame(&mut img_buf).unwrap();
@@ -117,7 +117,7 @@ mod tests {
             .map(|items| { [items[2], items[1], items[0]] })
             .collect::<Vec<_>>();
 
-        let mat = imgcodecs::imread(path, imgcodecs::IMREAD_COLOR).unwrap();
+        let mat = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap();
 
         let actual_pixels = OpenCVCamera::extract_pixels_from_mat(&mat);
         assert_eq!(expected_pixels, actual_pixels);
