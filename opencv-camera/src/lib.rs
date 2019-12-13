@@ -41,9 +41,9 @@ impl OpenCVCamera {
 
         let config = CameraConfig {
             id: index as u8,
-            resolution: resolution,
-            pose: pose,
-            fov: fov,
+            resolution,
+            pose,
+            fov,
         };
 
         Ok(Self {
@@ -91,7 +91,7 @@ impl Camera for OpenCVCamera {
         Ok(Image {
             timestamp: std::time::SystemTime::now(),
             camera: self.get_config(),
-            pixels: pixels,
+            pixels,
         })
     }
 }
@@ -102,8 +102,8 @@ mod tests {
 
     #[test]
     fn test_mat_pixel_extraction() {
-        use std::fs::File;
         use opencv::imgcodecs;
+        use std::fs::File;
 
         const PATH: &str = "tests/images/rand.png";
 
@@ -114,7 +114,7 @@ mod tests {
 
         let expected_pixels = img_buf
             .chunks_exact(3)
-            .map(|items| { [items[2], items[1], items[0]] })
+            .map(|items| [items[2], items[1], items[0]])
             .collect::<Vec<_>>();
 
         let mat = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap();
