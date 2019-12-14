@@ -24,14 +24,13 @@ impl<'a> Image<'a> {
     }
 }
 
-pub struct Contour<'a> {
-    pub image: &'a Image<'a>,
+pub struct Contour {
     pub points: Vec<(u32, u32)>,
 }
 
 pub struct Target<'a> {
     pub camera: &'a CameraConfig,
-    pub contours: Vec<Contour<'a>>,
+    pub contours: Vec<Contour>,
     pub theta: f64,
     pub beta: f64,
     pub dist: f64,
