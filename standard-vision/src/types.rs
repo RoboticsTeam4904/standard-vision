@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 pub struct Pose {
     pub x: i32,
     pub y: i32,
@@ -12,10 +14,19 @@ pub struct CameraConfig {
     pub fov: f64,
 }
 
+
 pub struct Image<'a> {
     pub timestamp: std::time::SystemTime,
     pub camera: &'a CameraConfig,
     pub pixels: ndarray::Array3<u8>,
+}
+
+impl<'a> Deref for Image<'a> {
+    type Target = ndarray::Array3<u8>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pixels
+    }
 }
 
 pub struct Contour {
