@@ -14,6 +14,7 @@ pub struct CameraConfig {
     pub resolution: (u32, u32),
     pub pose: Pose,
     pub fov: f64,
+    pub focal_length: f64,
 }
 
 pub struct Image<'a> {
