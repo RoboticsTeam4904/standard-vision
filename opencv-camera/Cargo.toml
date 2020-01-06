@@ -5,7 +5,7 @@ authors = []
 edition = "2018"
 
 [dependencies]
-opencv = { version = "^0.28.0", default-features = false, features = ["opencv-41"] }
+opencv = { git = "https://github.com/twistedfall/opencv-rust", default-features = false, features = ["opencv-4"] }
 standard-vision = { path = "../standard-vision" }
 
 [dev-dependencies]

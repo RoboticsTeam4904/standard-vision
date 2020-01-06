@@ -1,4 +1,7 @@
-use std::ops::Deref;
+use std::ops::DerefMut;
+
+type Pixels<'a> = ndarray::ArrayView3<'a, u8>;
+type ImageData<'a> = Box<dyn DerefMut<Target = Pixels<'a>>>;
 
 pub struct Pose {
     pub x: i32,
@@ -18,15 +21,7 @@ pub struct CameraConfig {
 pub struct Image<'a> {
     pub timestamp: std::time::SystemTime,
     pub camera: &'a CameraConfig,
-    pub pixels: ndarray::Array3<u8>,
-}
-
-impl<'a> Deref for Image<'a> {
-    type Target = ndarray::Array3<u8>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.pixels
-    }
+    pub pixels: ImageData<'a>,
 }
 
 pub struct Contour {
