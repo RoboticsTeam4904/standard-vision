@@ -1,7 +1,6 @@
 use std::ops::DerefMut;
 
 type Pixels<'a> = ndarray::ArrayView3<'a, u8>;
-type ImageData<'a> = Box<dyn DerefMut<Target = Pixels<'a>>>;
 
 pub struct Pose {
     pub x: i32,
@@ -17,12 +16,13 @@ pub struct CameraConfig {
     pub fov: f64,
 }
 
-
 pub struct Image<'a> {
     pub timestamp: std::time::SystemTime,
     pub camera: &'a CameraConfig,
-    pub pixels: ImageData<'a>,
+    pub pixels: Box<dyn ImageData<'a>>,
 }
+
+pub trait ImageData<'a>: DerefMut<Target = Pixels<'a>> {}
 
 pub struct Contour {
     pub points: Vec<(u32, u32)>,

@@ -9,6 +9,11 @@ use opencv::videoio::*;
 use standard_vision::traits::Camera;
 use standard_vision::types::{CameraConfig, Image, Pose};
 
+struct OpenCVImage {
+    mat: Mat,
+    
+}
+
 pub struct OpenCVCamera {
     config: CameraConfig,
     video_capture: VideoCapture,
@@ -50,22 +55,6 @@ impl OpenCVCamera {
             config,
             video_capture,
         })
-    }
-
-    pub(crate) fn extract_pixels_from_mat(mat: &Mat) -> Vec<[u8; 3]> {
-        // Expecting 8UC3 Mat type...
-        assert_eq!(mat.typ().unwrap(), core::CV_8UC3);
-
-        let mut pixels = vec![];
-
-        for row_idx in 0..mat.rows().unwrap() {
-            for col_idx in 0..mat.cols().unwrap() {
-                let pixel_vec3b = *mat.at_2d::<core::Vec3b>(row_idx, col_idx).unwrap();
-                pixels.push(*pixel_vec3b);
-            }
-        }
-
-        pixels
     }
 }
 

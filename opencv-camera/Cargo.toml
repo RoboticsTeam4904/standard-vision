@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 opencv = { git = "https://github.com/twistedfall/opencv-rust", default-features = false, features = ["opencv-4"] }
 standard-vision = { path = "../standard-vision" }
+ndarray = "0.13.0"
 
 [dev-dependencies]
 png = "^0.15.2"
