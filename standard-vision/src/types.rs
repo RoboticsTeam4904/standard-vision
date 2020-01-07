@@ -15,6 +15,7 @@ pub struct CameraConfig {
     pub pose: Pose,
     pub fov: f64,
     pub focal_length: f64,
+    pub sensor_height: f64,
 }
 
 pub struct Image<'a> {
