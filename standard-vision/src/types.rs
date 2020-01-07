@@ -1,6 +1,10 @@
-use std::ops::DerefMut;
-
-type Pixels<'a> = ndarray::ArrayView3<'a, u8>;
+use crate::traits::ImageData;
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+    time::SystemTime,
+};
+use ndarray::{ArrayView3, ArrayViewMut3};
 
 pub struct Pose {
     pub x: i32,
@@ -18,13 +22,31 @@ pub struct CameraConfig {
     pub sensor_height: f64,
 }
 
-pub struct Image<'a> {
-    pub timestamp: std::time::SystemTime,
+pub struct Image<'a, T, I: ImageData<T>> {
+    pub timestamp: SystemTime,
     pub camera: &'a CameraConfig,
-    pub pixels: Box<dyn ImageData<'a>>,
+    pub pixels: I,
+    raw: PhantomData<T>,
 }
 
-pub trait ImageData<'a>: DerefMut<Target = Pixels<'a>> {}
+impl<'a, T, I: ImageData<T>> Image<'a, T, I> {
+    pub fn new(timestamp: SystemTime, camera: &'a CameraConfig, pixels: I) -> Self {
+        Self {
+            timestamp,
+            camera,
+            pixels,
+            raw: PhantomData::default(),
+        }
+    }
+}
+
+impl<'a, T, I: ImageData<T>> Deref for Image<'a, T, I> {
+    type Target = I;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pixels
+    }
+}
 
 pub struct Contour {
     pub points: Vec<(u32, u32)>,

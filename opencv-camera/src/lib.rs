@@ -3,15 +3,37 @@ extern crate png;
 
 use std::io;
 
-use opencv::core;
-use opencv::prelude::*;
-use opencv::videoio::*;
-use standard_vision::traits::Camera;
-use standard_vision::types::{CameraConfig, Image, Pose};
+use ndarray::{ArrayView3, ArrayViewMut, ArrayViewMut3};
+use opencv::{
+    prelude::*,
+    videoio::*
+};
+use standard_vision::{
+    traits::{Camera, ImageData},
+    types::{CameraConfig, Image, Pose},
+};
 
-struct OpenCVImage {
+struct OpenCVImage<'a> {
     mat: Mat,
-    
+    pixels: ArrayViewMut3<'a, u8>,
+}
+
+impl<'a> ImageData<Mat> for OpenCVImage<'a> {
+    fn as_pixels(&self) -> ArrayView3<u8> {
+        self.pixels.view()
+    }
+
+    fn as_pixels_mut(&mut self) -> ArrayViewMut3<u8> {
+        self.pixels.view_mut()
+    }
+
+    fn as_raw(&self) -> &Mat {
+        &self.mat
+    }
+
+    fn as_raw_mut(&mut self) -> &mut Mat {
+        &mut self.mat
+    }
 }
 
 pub struct OpenCVCamera {
@@ -20,7 +42,7 @@ pub struct OpenCVCamera {
 }
 
 impl OpenCVCamera {
-    pub fn new_from_index(index: i32, pose: Pose, fov: f64) -> io::Result<Self> {
+    pub fn new_from_index(index: i32, pose: Pose, fov: f64, focal_length: f64) -> io::Result<Self> {
         let mut video_capture = VideoCapture::default().unwrap();
 
         if !video_capture.open_with_backend(index, CAP_ANY).unwrap() {
@@ -30,7 +52,7 @@ impl OpenCVCamera {
             ));
         }
 
-        Self::new_from_video_capture(video_capture, index, pose, fov)
+        Self::new_from_video_capture(video_capture, index, pose, fov, focal_length)
     }
 
     pub(crate) fn new_from_video_capture(
@@ -38,6 +60,7 @@ impl OpenCVCamera {
         index: i32,
         pose: Pose,
         fov: f64,
+        focal_length: f64,
     ) -> io::Result<Self> {
         let resolution = (
             video_capture.get(CAP_PROP_FRAME_WIDTH).unwrap() as u32,
@@ -49,6 +72,7 @@ impl OpenCVCamera {
             resolution,
             pose,
             fov,
+            focal_length,
         };
 
         Ok(Self {
@@ -56,14 +80,27 @@ impl OpenCVCamera {
             video_capture,
         })
     }
+
+    pub(crate) unsafe fn extract_pixels_from_mat<'a>(mat: Mat) -> OpenCVImage<'a> {
+        let mut mat = mat;
+        let pixels = ArrayViewMut::from_shape_ptr(
+            (
+                mat.rows().unwrap() as usize,
+                mat.cols().unwrap() as usize,
+                3,
+            ),
+            mat.ptr_mut(0).unwrap(),
+        );
+        OpenCVImage { mat, pixels }
+    }
 }
 
-impl Camera for OpenCVCamera {
+impl<'a> Camera<Mat, OpenCVImage<'a>> for OpenCVCamera {
     fn get_config(&self) -> &CameraConfig {
         &self.config
     }
 
-    fn grab_frame(&mut self) -> io::Result<Image> {
+    fn grab_frame(&mut self) -> io::Result<Image<Mat, OpenCVImage<'a>>> {
         let mut mat = Mat::default().unwrap();
         if !self.video_capture.read(&mut mat).unwrap() {
             return Err(io::Error::new(
@@ -75,13 +112,13 @@ impl Camera for OpenCVCamera {
             ));
         }
 
-        let pixels = Self::extract_pixels_from_mat(&mat);
+        let pixels = unsafe { Self::extract_pixels_from_mat(mat) };
 
-        Ok(Image {
-            timestamp: std::time::SystemTime::now(),
-            camera: self.get_config(),
+        Ok(Image::new(
+            std::time::SystemTime::now(),
+            self.get_config(),
             pixels,
-        })
+        ))
     }
 }
 
@@ -91,8 +128,9 @@ mod tests {
 
     #[test]
     fn test_mat_pixel_extraction() {
-        use opencv::imgcodecs;
+        use opencv::{core::Vec3, imgcodecs};
         use std::fs::File;
+        use ndarray::s;
 
         const PATH: &str = "tests/images/rand.png";
 
@@ -101,14 +139,33 @@ mod tests {
         let mut img_buf = vec![0; info.buffer_size()];
         reader.next_frame(&mut img_buf).unwrap();
 
-        let expected_pixels = img_buf
+        let expected_pixels_buf = img_buf
             .chunks_exact(3)
             .map(|items| [items[2], items[1], items[0]])
             .collect::<Vec<_>>();
 
-        let mat = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap();
-
-        let actual_pixels = OpenCVCamera::extract_pixels_from_mat(&mat);
-        assert_eq!(expected_pixels, actual_pixels);
+        let cv_image = unsafe {
+            OpenCVCamera::extract_pixels_from_mat(
+                imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap(),
+            )
+        };
+        let cv_pixels = cv_image.as_pixels();
+        let cv_raw = cv_image.as_raw();
+        assert_eq!(
+            cv_pixels.shape(),
+            [
+                cv_raw.rows().unwrap() as usize,
+                cv_raw.cols().unwrap() as usize,
+                3
+            ]
+        );
+        let img_dims = cv_pixels.shape();
+        for i in 0..img_dims[0] {
+            for j in 0..img_dims[1] {
+                let expected_pixel = expected_pixels_buf[i * img_dims[1] + j];
+                assert_eq!(cv_pixels.slice(s![i, j, ..]).as_slice().unwrap(), expected_pixel);
+                assert_eq!(**cv_raw.at_2d::<Vec3<u8>>(i as i32, j as i32).unwrap(), expected_pixel);
+            }
+        }
     }
 }
