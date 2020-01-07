@@ -22,5 +22,5 @@ pub trait ContourExtractor<T, I: ImageData<T>> {
 }
 
 pub trait ContourAnalyzer {
-    fn analyze(&self, contours: Vec<&Contour>) -> Vec<Target>;
+    fn analyze(&self, config: &CameraConfig, contours: &Vec<Contour>) -> Vec<Target>;
 }
