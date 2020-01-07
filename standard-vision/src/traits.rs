@@ -1,6 +1,6 @@
 use crate::types::*;
 use ndarray::{ArrayView3, ArrayViewMut3};
-use std::io;
+use std::{ops::Deref, io};
 
 pub trait Camera<T, I: ImageData<T>> {
     fn get_config(&self) -> &CameraConfig;

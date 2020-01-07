@@ -1,5 +1,10 @@
 use crate::traits::ImageData;
-use std::{ops::{Deref, DerefMut}, marker::PhantomData, time::SystemTime};
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+    time::SystemTime,
+};
+use ndarray::{ArrayView3, ArrayViewMut3};
 
 pub struct Pose {
     pub x: i32,
@@ -39,12 +44,6 @@ impl<'a, T, I: ImageData<T>> Deref for Image<'a, T, I> {
 
     fn deref(&self) -> &Self::Target {
         &self.pixels
-    }
-}
-
-impl<'a, T, I: ImageData<T>> DerefMut for Image<'a, T, I> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.pixels
     }
 }
 
