@@ -1,13 +1,17 @@
 #[cfg(test)]
 extern crate png;
 
-use std::{io, marker::PhantomData};
+use std::io;
 
 use ndarray::{ArrayView3, ArrayViewMut, ArrayViewMut3};
-use opencv::prelude::*;
-use opencv::videoio::*;
-use standard_vision::traits::{Camera, ImageData};
-use standard_vision::types::{CameraConfig, Image, Pose};
+use opencv::{
+    prelude::*,
+    videoio::*
+};
+use standard_vision::{
+    traits::{Camera, ImageData},
+    types::{CameraConfig, Image, Pose},
+};
 
 struct OpenCVImage<'a> {
     mat: Mat,
@@ -124,8 +128,9 @@ mod tests {
 
     #[test]
     fn test_mat_pixel_extraction() {
-        use opencv::imgcodecs;
+        use opencv::{core::Vec3, imgcodecs};
         use std::fs::File;
+        use ndarray::s;
 
         const PATH: &str = "tests/images/rand.png";
 
@@ -134,14 +139,33 @@ mod tests {
         let mut img_buf = vec![0; info.buffer_size()];
         reader.next_frame(&mut img_buf).unwrap();
 
-        let expected_pixels = img_buf
+        let expected_pixels_buf = img_buf
             .chunks_exact(3)
             .map(|items| [items[2], items[1], items[0]])
             .collect::<Vec<_>>();
 
-        let mat = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap();
-
-        let actual_pixels = OpenCVCamera::extract_pixels_from_mat(mat);
-        assert_eq!(expected_pixels, actual_pixels);
+        let cv_image = unsafe {
+            OpenCVCamera::extract_pixels_from_mat(
+                imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap(),
+            )
+        };
+        let cv_pixels = cv_image.as_pixels();
+        let cv_raw = cv_image.as_raw();
+        assert_eq!(
+            cv_pixels.shape(),
+            [
+                cv_raw.rows().unwrap() as usize,
+                cv_raw.cols().unwrap() as usize,
+                3
+            ]
+        );
+        let img_dims = cv_pixels.shape();
+        for i in 0..img_dims[0] {
+            for j in 0..img_dims[1] {
+                let expected_pixel = expected_pixels_buf[i * img_dims[1] + j];
+                assert_eq!(cv_pixels.slice(s![i, j, ..]).as_slice().unwrap(), expected_pixel);
+                assert_eq!(**cv_raw.at_2d::<Vec3<u8>>(i as i32, j as i32).unwrap(), expected_pixel);
+            }
+        }
     }
 }
