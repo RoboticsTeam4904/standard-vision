@@ -1,5 +1,5 @@
 use crate::traits::ImageData;
-use std::{marker::PhantomData, time::SystemTime};
+use std::{ops::{Deref, DerefMut}, marker::PhantomData, time::SystemTime};
 
 pub struct Pose {
     pub x: i32,
@@ -23,6 +23,30 @@ pub struct Image<'a, T, I: ImageData<T>> {
     raw: PhantomData<T>,
 }
 
+impl<'a, T, I: ImageData<T>> Image<'a, T, I> {
+    pub fn new(timestamp: SystemTime, camera: &'a CameraConfig, pixels: I) -> Self {
+        Self {
+            timestamp,
+            camera,
+            pixels,
+            raw: PhantomData::default(),
+        }
+    }
+}
+
+impl<'a, T, I: ImageData<T>> Deref for Image<'a, T, I> {
+    type Target = I;
+
+    fn deref(&self) -> &Self::Target {
+        &self.pixels
+    }
+}
+
+impl<'a, T, I: ImageData<T>> DerefMut for Image<'a, T, I> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.pixels
+    }
+}
 
 pub struct Contour {
     pub points: Vec<(u32, u32)>,

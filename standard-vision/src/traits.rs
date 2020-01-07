@@ -13,8 +13,8 @@ pub trait Camera<T, I: ImageData<T>> {
 pub trait ImageData<T> {
     fn as_pixels(&self) -> ArrayView3<u8>;
     fn as_pixels_mut(&mut self) -> ArrayViewMut3<u8>;
-    fn as_raw(&self) -> T;
-    fn as_raw_mut(&self) -> &mut T;
+    fn as_raw(&self) -> &T;
+    fn as_raw_mut(&mut self) -> &mut T;
 }
 
 pub trait ContourExtractor<T, I: ImageData<T>> {
