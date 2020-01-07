@@ -3,15 +3,15 @@ extern crate png;
 
 use std::io;
 
-use opencv::core;
 use opencv::prelude::*;
 use opencv::videoio::*;
+use ndarray::ArrayView3;
 use standard_vision::traits::Camera;
 use standard_vision::types::{CameraConfig, Image, Pose};
 
-struct OpenCVImage {
+struct OpenCVImage<'a> {
     mat: Mat,
-    
+    pixels: ArrayView3<'a, u8>,
 }
 
 pub struct OpenCVCamera {
