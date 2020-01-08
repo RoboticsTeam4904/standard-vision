@@ -5,6 +5,7 @@ use std::{
     time::SystemTime,
 };
 
+/// General struct for storing positional data
 pub struct Pose {
     pub x: i32,
     pub y: i32,
@@ -12,6 +13,7 @@ pub struct Pose {
     pub angle: f64,
 }
 
+/// Description of a camera's properties
 pub struct CameraConfig {
     pub id: u8,
     pub resolution: (u32, u32),
@@ -21,6 +23,9 @@ pub struct CameraConfig {
     pub sensor_height: f64,
 }
 
+
+/// `Image` stores an images data as well as its associated properties and derefs into `pixels`.
+/// `T` is the raw data type of the image in memory.
 pub struct Image<'a, T, I: ImageData<T>> {
     pub timestamp: SystemTime,
     pub camera: &'a CameraConfig,
@@ -53,6 +58,7 @@ impl<'a, T, I: ImageData<T>> DerefMut for Image<'a, T, I> {
     }
 }
 
+/// Stores contours of an images.
 pub struct Contour {
     pub points: Vec<(u32, u32)>,
 }
