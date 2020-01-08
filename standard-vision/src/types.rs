@@ -1,6 +1,5 @@
 use crate::traits::ImageData;
 use std::{
-    marker::PhantomData,
     ops::{Deref, DerefMut},
     time::SystemTime,
 };
@@ -26,25 +25,23 @@ pub struct CameraConfig {
 
 /// `Image` stores an images data as well as its associated properties and derefs into `pixels`.
 /// `T` is the raw data type of the image in memory.
-pub struct Image<'a, T, I: ImageData<T>> {
+pub struct Image<'a, I: ImageData> {
     pub timestamp: SystemTime,
     pub camera: &'a CameraConfig,
     pub pixels: I,
-    raw: PhantomData<T>,
 }
 
-impl<'a, T, I: ImageData<T>> Image<'a, T, I> {
+impl<'a, I: ImageData> Image<'a, I> {
     pub fn new(timestamp: SystemTime, camera: &'a CameraConfig, pixels: I) -> Self {
         Self {
             timestamp,
             camera,
             pixels,
-            raw: PhantomData,
         }
     }
 }
 
-impl<'a, T, I: ImageData<T>> Deref for Image<'a, T, I> {
+impl<'a, I: ImageData> Deref for Image<'a, I> {
     type Target = I;
 
     fn deref(&self) -> &Self::Target {
@@ -52,7 +49,7 @@ impl<'a, T, I: ImageData<T>> Deref for Image<'a, T, I> {
     }
 }
 
-impl<'a, T, I: ImageData<T>> DerefMut for Image<'a, T, I> {
+impl<'a, I: ImageData> DerefMut for Image<'a, I> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.pixels
     }
