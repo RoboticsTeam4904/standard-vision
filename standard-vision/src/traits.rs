@@ -1,6 +1,6 @@
 use crate::types::*;
 use ndarray::{ArrayView3, ArrayViewMut3};
-use std::{ops::Deref, io};
+use std::io;
 
 pub trait Camera<T, I: ImageData<T>> {
     fn get_config(&self) -> &CameraConfig;
@@ -21,6 +21,6 @@ pub trait ContourExtractor<T, I: ImageData<T>> {
     fn extract_from(&self, image: &Image<T, I>) -> Vec<Contour>;
 }
 
-pub trait ContourAnalyzer {
-    fn analyze(&self, config: &CameraConfig, contours: &Vec<Contour>) -> Vec<Target>;
+pub trait ContourAnalyzer<T> {
+    fn analyze(&self, config: &CameraConfig, contours: &Vec<Contour>) -> Vec<T>;
 }

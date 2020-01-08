@@ -1,5 +1,5 @@
 #[cfg(test)]
-extern crate png;
+use png;
 
 use std::io;
 

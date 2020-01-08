@@ -4,7 +4,6 @@ use std::{
     ops::{Deref, DerefMut},
     time::SystemTime,
 };
-use ndarray::{ArrayView3, ArrayViewMut3};
 
 pub struct Pose {
     pub x: i32,
@@ -34,7 +33,7 @@ impl<'a, T, I: ImageData<T>> Image<'a, T, I> {
             timestamp,
             camera,
             pixels,
-            raw: PhantomData::default(),
+            raw: PhantomData,
         }
     }
 }
@@ -47,15 +46,12 @@ impl<'a, T, I: ImageData<T>> Deref for Image<'a, T, I> {
     }
 }
 
-pub struct Contour {
-    pub points: Vec<(u32, u32)>,
+impl<'a, T, I: ImageData<T>> DerefMut for Image<'a, T, I> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.pixels
+    }
 }
 
-pub struct Target<'a> {
-    pub camera: &'a CameraConfig,
-    pub contours: Vec<Contour>,
-    pub theta: f64,
-    pub beta: f64,
-    pub dist: f64,
-    pub confidence: f32,
+pub struct Contour {
+    pub points: Vec<(u32, u32)>,
 }
