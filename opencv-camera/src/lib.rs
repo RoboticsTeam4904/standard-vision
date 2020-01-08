@@ -26,11 +26,11 @@ impl<'a> ImageData for OpenCVImage<'a> {
         self.pixels.view_mut()
     }
 
-    fn as_raw(&self) -> &Mat {
+    fn as_raw(&self) -> &Self::Inner {
         &self.mat
     }
 
-    fn as_raw_mut(&mut self) -> &mut Mat {
+    fn as_raw_mut(&mut self) -> &mut Self::Inner {
         &mut self.mat
     }
 }
