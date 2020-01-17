@@ -10,6 +10,8 @@ use standard_vision::{
     types::{CameraConfig, Image, Pose},
 };
 
+mod image;
+
 struct OpenCVImage<'a> {
     mat: Mat,
     pixels: ArrayViewMut3<'a, u8>,
@@ -98,6 +100,7 @@ impl OpenCVCamera {
             ),
             mat.ptr_mut(0).unwrap(),
         );
+        
         OpenCVImage { mat, pixels }
     }
 }
