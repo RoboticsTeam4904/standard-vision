@@ -10,7 +10,7 @@ use standard_vision::{
     types::{CameraConfig, Image, Pose},
 };
 
-mod image;
+pub mod image;
 
 struct OpenCVImage<'a> {
     mat: Mat,
@@ -100,7 +100,7 @@ impl OpenCVCamera {
             ),
             mat.ptr_mut(0).unwrap(),
         );
-        
+
         OpenCVImage { mat, pixels }
     }
 }
