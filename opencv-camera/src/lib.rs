@@ -12,7 +12,7 @@ use standard_vision::{
 
 pub mod image;
 
-struct OpenCVImage<'a> {
+pub struct OpenCVImage<'a> {
     mat: Mat,
     pixels: ArrayViewMut3<'a, u8>,
 }
