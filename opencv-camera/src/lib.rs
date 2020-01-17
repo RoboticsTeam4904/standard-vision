@@ -1,3 +1,5 @@
+pub mod image;
+
 #[cfg(test)]
 use png;
 
@@ -9,8 +11,6 @@ use standard_vision::{
     traits::{Camera, ImageData},
     types::{CameraConfig, Image, Pose},
 };
-
-pub mod image;
 
 pub struct OpenCVImage<'a> {
     mat: Mat,
@@ -34,6 +34,23 @@ impl<'a> ImageData for OpenCVImage<'a> {
 
     fn as_raw_mut(&mut self) -> &mut Self::Inner {
         &mut self.mat
+    }
+}
+
+impl<'a> From<Mat> for OpenCVImage<'a> {
+    fn from(mut mat: Mat) -> Self {
+        let pixels = unsafe {
+            ArrayViewMut::from_shape_ptr(
+                (
+                    mat.rows().unwrap() as usize,
+                    mat.cols().unwrap() as usize,
+                    3,
+                ),
+                mat.ptr_mut(0).unwrap(),
+            )
+        };
+
+        OpenCVImage { mat, pixels }
     }
 }
 
@@ -89,20 +106,6 @@ impl OpenCVCamera {
             video_capture,
         })
     }
-
-    pub(crate) unsafe fn extract_pixels_from_mat<'a>(mat: Mat) -> OpenCVImage<'a> {
-        let mut mat = mat;
-        let pixels = ArrayViewMut::from_shape_ptr(
-            (
-                mat.rows().unwrap() as usize,
-                mat.cols().unwrap() as usize,
-                3,
-            ),
-            mat.ptr_mut(0).unwrap(),
-        );
-
-        OpenCVImage { mat, pixels }
-    }
 }
 
 impl<'a> Camera<OpenCVImage<'a>> for OpenCVCamera {
@@ -122,12 +125,10 @@ impl<'a> Camera<OpenCVImage<'a>> for OpenCVCamera {
             ));
         }
 
-        let pixels = unsafe { Self::extract_pixels_from_mat(mat) };
-
         Ok(Image::new(
             std::time::SystemTime::now(),
             self.config(),
-            pixels,
+            mat.into(),
         ))
     }
 }
@@ -154,11 +155,10 @@ mod tests {
             .map(|items| [items[2], items[1], items[0]])
             .collect::<Vec<_>>();
 
-        let cv_image = unsafe {
-            OpenCVCamera::extract_pixels_from_mat(
-                imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap(),
-            )
-        };
+        let cv_image: OpenCVImage = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR)
+            .unwrap()
+            .into();
+
         let cv_pixels = cv_image.as_pixels();
         let cv_raw = cv_image.as_raw();
         assert_eq!(

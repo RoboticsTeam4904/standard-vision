@@ -1,4 +1,5 @@
 use opencv::prelude::*;
+
 use standard_vision::{traits::ImageData, types::Image};
 
 pub trait AsMat {
@@ -6,7 +7,7 @@ pub trait AsMat {
     fn as_mat_mut(&mut self) -> Mat;
 }
 
-impl<'a, T: ImageData> AsMat for Image<'a, T> {
+impl<'a, I: ImageData> AsMat for Image<'a, I> {
     fn as_mat(&self) -> Mat {
         unsafe { Mat::from_raw_ptr(self.as_pixels().as_ptr() as *mut std::ffi::c_void) }
     }
