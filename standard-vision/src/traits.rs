@@ -35,8 +35,8 @@ pub trait ImageData {
 }
 
 /// An interface that extracts contours from an `Image`.
-pub trait ContourExtractor<I: ImageData> {
-    fn extract_from(&self, image: &Image<I>) -> Vec<Contour>;
+pub trait ContourExtractor {
+    fn extract_from<I: ImageData>(&self, image: &Image<I>) -> Vec<Contour>;
 }
 
 /// An interface that computes `Target`s given a number of `Contour`s.
