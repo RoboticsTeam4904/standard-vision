@@ -1,7 +1,7 @@
 use opencv::prelude::*;
 use standard_vision::{traits::ImageData, types::Image};
 
-trait AsMat {
+pub trait AsMat {
     fn as_mat(&self) -> Mat;
     fn as_mat_mut(&mut self) -> Mat;
 }
