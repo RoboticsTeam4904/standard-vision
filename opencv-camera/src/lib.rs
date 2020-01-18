@@ -1,24 +1,25 @@
+pub mod image;
+
 #[cfg(test)]
 use png;
 
 use std::io;
 
 use ndarray::{ArrayView3, ArrayViewMut, ArrayViewMut3};
-use opencv::{
-    prelude::*,
-    videoio::*
-};
+use opencv::{prelude::*, videoio::*};
 use standard_vision::{
     traits::{Camera, ImageData},
     types::{CameraConfig, Image, Pose},
 };
 
-struct OpenCVImage<'a> {
+pub struct OpenCVImage<'a> {
     mat: Mat,
     pixels: ArrayViewMut3<'a, u8>,
 }
 
-impl<'a> ImageData<Mat> for OpenCVImage<'a> {
+impl<'a> ImageData for OpenCVImage<'a> {
+    type Inner = Mat;
+
     fn as_pixels(&self) -> ArrayView3<u8> {
         self.pixels.view()
     }
@@ -27,12 +28,29 @@ impl<'a> ImageData<Mat> for OpenCVImage<'a> {
         self.pixels.view_mut()
     }
 
-    fn as_raw(&self) -> &Mat {
+    fn as_raw(&self) -> &Self::Inner {
         &self.mat
     }
 
-    fn as_raw_mut(&mut self) -> &mut Mat {
+    fn as_raw_mut(&mut self) -> &mut Self::Inner {
         &mut self.mat
+    }
+}
+
+impl<'a> From<Mat> for OpenCVImage<'a> {
+    fn from(mut mat: Mat) -> Self {
+        let pixels = unsafe {
+            ArrayViewMut::from_shape_ptr(
+                (
+                    mat.rows().unwrap() as usize,
+                    mat.cols().unwrap() as usize,
+                    3,
+                ),
+                mat.ptr_mut(0).unwrap(),
+            )
+        };
+
+        OpenCVImage { mat, pixels }
     }
 }
 
@@ -42,7 +60,13 @@ pub struct OpenCVCamera {
 }
 
 impl OpenCVCamera {
-    pub fn new_from_index(index: i32, pose: Pose, fov: f64, focal_length: f64) -> io::Result<Self> {
+    pub fn new_from_index(
+        index: i32,
+        pose: Pose,
+        fov: f64,
+        focal_length: f64,
+        sensor_height: f64,
+    ) -> io::Result<Self> {
         let mut video_capture = VideoCapture::default().unwrap();
 
         if !video_capture.open_with_backend(index, CAP_ANY).unwrap() {
@@ -52,7 +76,7 @@ impl OpenCVCamera {
             ));
         }
 
-        Self::new_from_video_capture(video_capture, index, pose, fov, focal_length)
+        Self::new_from_video_capture(video_capture, index, pose, fov, focal_length, sensor_height)
     }
 
     pub(crate) fn new_from_video_capture(
@@ -61,6 +85,7 @@ impl OpenCVCamera {
         pose: Pose,
         fov: f64,
         focal_length: f64,
+        sensor_height: f64,
     ) -> io::Result<Self> {
         let resolution = (
             video_capture.get(CAP_PROP_FRAME_WIDTH).unwrap() as u32,
@@ -73,6 +98,7 @@ impl OpenCVCamera {
             pose,
             fov,
             focal_length,
+            sensor_height,
         };
 
         Ok(Self {
@@ -80,27 +106,14 @@ impl OpenCVCamera {
             video_capture,
         })
     }
-
-    pub(crate) unsafe fn extract_pixels_from_mat<'a>(mat: Mat) -> OpenCVImage<'a> {
-        let mut mat = mat;
-        let pixels = ArrayViewMut::from_shape_ptr(
-            (
-                mat.rows().unwrap() as usize,
-                mat.cols().unwrap() as usize,
-                3,
-            ),
-            mat.ptr_mut(0).unwrap(),
-        );
-        OpenCVImage { mat, pixels }
-    }
 }
 
-impl<'a> Camera<Mat, OpenCVImage<'a>> for OpenCVCamera {
-    fn get_config(&self) -> &CameraConfig {
+impl<'a> Camera<OpenCVImage<'a>> for OpenCVCamera {
+    fn config(&self) -> &CameraConfig {
         &self.config
     }
 
-    fn grab_frame(&mut self) -> io::Result<Image<Mat, OpenCVImage<'a>>> {
+    fn grab_frame(&mut self) -> io::Result<Image<OpenCVImage<'a>>> {
         let mut mat = Mat::default().unwrap();
         if !self.video_capture.read(&mut mat).unwrap() {
             return Err(io::Error::new(
@@ -112,12 +125,10 @@ impl<'a> Camera<Mat, OpenCVImage<'a>> for OpenCVCamera {
             ));
         }
 
-        let pixels = unsafe { Self::extract_pixels_from_mat(mat) };
-
         Ok(Image::new(
             std::time::SystemTime::now(),
-            self.get_config(),
-            pixels,
+            self.config(),
+            mat.into(),
         ))
     }
 }
@@ -128,9 +139,9 @@ mod tests {
 
     #[test]
     fn test_mat_pixel_extraction() {
+        use ndarray::s;
         use opencv::{core::Vec3, imgcodecs};
         use std::fs::File;
-        use ndarray::s;
 
         const PATH: &str = "tests/images/rand.png";
 
@@ -144,11 +155,10 @@ mod tests {
             .map(|items| [items[2], items[1], items[0]])
             .collect::<Vec<_>>();
 
-        let cv_image = unsafe {
-            OpenCVCamera::extract_pixels_from_mat(
-                imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap(),
-            )
-        };
+        let cv_image: OpenCVImage = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR)
+            .unwrap()
+            .into();
+
         let cv_pixels = cv_image.as_pixels();
         let cv_raw = cv_image.as_raw();
         assert_eq!(
@@ -163,8 +173,14 @@ mod tests {
         for i in 0..img_dims[0] {
             for j in 0..img_dims[1] {
                 let expected_pixel = expected_pixels_buf[i * img_dims[1] + j];
-                assert_eq!(cv_pixels.slice(s![i, j, ..]).as_slice().unwrap(), expected_pixel);
-                assert_eq!(**cv_raw.at_2d::<Vec3<u8>>(i as i32, j as i32).unwrap(), expected_pixel);
+                assert_eq!(
+                    cv_pixels.slice(s![i, j, ..]).as_slice().unwrap(),
+                    expected_pixel
+                );
+                assert_eq!(
+                    **cv_raw.at_2d::<Vec3<u8>>(i as i32, j as i32).unwrap(),
+                    expected_pixel
+                );
             }
         }
     }
