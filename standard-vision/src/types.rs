@@ -18,7 +18,7 @@ pub struct CameraConfig {
     pub id: u8,
     pub resolution: (u32, u32),
     pub pose: Pose,
-    pub fov: f64,
+    pub fov: (f64, f64),
     pub focal_length: f64,
     pub sensor_height: f64,
 }
