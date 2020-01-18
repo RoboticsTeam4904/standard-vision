@@ -63,7 +63,7 @@ impl OpenCVCamera {
     pub fn new_from_index(
         index: i32,
         pose: Pose,
-        fov: f64,
+        fov: (f64, f64),
         focal_length: f64,
         sensor_height: f64,
     ) -> io::Result<Self> {
@@ -83,7 +83,7 @@ impl OpenCVCamera {
         video_capture: VideoCapture,
         index: i32,
         pose: Pose,
-        fov: f64,
+        fov: (f64, f64),
         focal_length: f64,
         sensor_height: f64,
     ) -> io::Result<Self> {
