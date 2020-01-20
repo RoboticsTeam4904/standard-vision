@@ -5,6 +5,7 @@ use std::{
 };
 
 /// A representation of a relative position and rotation.
+#[derive(Default)]
 pub struct Pose {
     pub x: i32,
     pub y: i32,
@@ -13,6 +14,7 @@ pub struct Pose {
 }
 
 /// A collection of camera properties.
+#[derive(Default)]
 pub struct CameraConfig {
     pub id: u8,
     pub resolution: (u32, u32),

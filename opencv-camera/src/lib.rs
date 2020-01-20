@@ -160,22 +160,12 @@ mod tests {
         let cv_image: OpenCVImage = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR)
             .unwrap()
             .into();
+        
+        let config = CameraConfig::default();
 
         let image = Image::new(
             std::time::SystemTime::now(),
-            &CameraConfig {
-                id: 0,
-                resolution: (0, 0),
-                pose: Pose {
-                    x: 0,
-                    y: 0,
-                    z: 0,
-                    angle: 0.0,
-                },
-                fov: (0.0, 0.0),
-                focal_length: 0.0,
-                sensor_height: 0.0,
-            },
+            &config,
             cv_image,
         );
 
