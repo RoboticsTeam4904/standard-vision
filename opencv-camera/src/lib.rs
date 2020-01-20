@@ -44,7 +44,7 @@ impl<'a> From<Mat> for OpenCVImage<'a> {
                 (
                     mat.rows().unwrap() as usize,
                     mat.cols().unwrap() as usize,
-                    3,
+                    mat.channels().unwrap() as usize,
                 ),
                 mat.ptr_mut(0).unwrap(),
             )
@@ -143,6 +143,8 @@ mod tests {
         use opencv::{core::Vec3, imgcodecs};
         use std::fs::File;
 
+        use image::AsMat;
+
         const PATH: &str = "tests/images/rand.png";
 
         let decoder = png::Decoder::new(File::open(PATH).unwrap());
@@ -159,26 +161,48 @@ mod tests {
             .unwrap()
             .into();
 
-        let cv_pixels = cv_image.as_pixels();
-        let cv_raw = cv_image.as_raw();
+        let image = Image::new(
+            std::time::SystemTime::now(),
+            &CameraConfig {
+                id: 0,
+                resolution: (0, 0),
+                pose: Pose {
+                    x: 0,
+                    y: 0,
+                    z: 0,
+                    angle: 0.0,
+                },
+                fov: (0.0, 0.0),
+                focal_length: 0.0,
+                sensor_height: 0.0,
+            },
+            cv_image,
+        );
+
+        let cv_pixels = image.as_pixels();
+        let cv_raw = &image.as_mat();
+
         assert_eq!(
             cv_pixels.shape(),
             [
                 cv_raw.rows().unwrap() as usize,
                 cv_raw.cols().unwrap() as usize,
-                3
+                cv_raw.channels().unwrap() as usize,
             ]
         );
+
         let img_dims = cv_pixels.shape();
-        for i in 0..img_dims[0] {
-            for j in 0..img_dims[1] {
-                let expected_pixel = expected_pixels_buf[i * img_dims[1] + j];
+        for row in 0..img_dims[0] {
+            for col in 0..img_dims[1] {
+                let expected_pixel = expected_pixels_buf[row * img_dims[1] + col];
+
                 assert_eq!(
-                    cv_pixels.slice(s![i, j, ..]).as_slice().unwrap(),
+                    cv_pixels.slice(s![row, col, ..]).as_slice().unwrap(),
                     expected_pixel
                 );
+
                 assert_eq!(
-                    **cv_raw.at_2d::<Vec3<u8>>(i as i32, j as i32).unwrap(),
+                    **cv_raw.at_2d::<Vec3<u8>>(row as i32, col as i32).unwrap(),
                     expected_pixel
                 );
             }

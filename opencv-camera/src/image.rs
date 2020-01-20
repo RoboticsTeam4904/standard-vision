@@ -16,9 +16,10 @@ impl<'a, I: ImageData> AsMat for Image<'a, I> {
             pixels.len_of(Axis(0)) as i32,
             pixels.len_of(Axis(1)) as i32,
             opencv::core::CV_8UC3,
-            unsafe { &mut *(pixels.first().unwrap() as *const u8 as *mut std::ffi::c_void) },
-            3,
-        ).unwrap()
+            unsafe { &mut *(pixels.as_ptr() as *mut std::ffi::c_void) },
+            pixels.stride_of(Axis(0)) as usize,
+        )
+        .unwrap()
     }
 
     fn as_mat_mut(&mut self) -> Mat {
@@ -28,9 +29,10 @@ impl<'a, I: ImageData> AsMat for Image<'a, I> {
             pixels.len_of(Axis(0)) as i32,
             pixels.len_of(Axis(1)) as i32,
             opencv::core::CV_8UC3,
-            unsafe { &mut *(pixels.first_mut().unwrap() as *mut u8 as *mut std::ffi::c_void) },
-            3,
-        ).unwrap()
+            unsafe { &mut *(pixels.as_mut_ptr() as *mut std::ffi::c_void) },
+            pixels.stride_of(Axis(0)) as usize,
+        )
+        .unwrap()
     }
 }
 
