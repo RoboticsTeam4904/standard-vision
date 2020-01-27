@@ -3,7 +3,7 @@ pub mod image;
 #[cfg(test)]
 use png;
 
-use std::io;
+use std::{io, rc::Rc};
 
 use ndarray::{ArrayView3, ArrayViewMut, ArrayViewMut3};
 use opencv::{prelude::*, videoio::*};
@@ -55,13 +55,13 @@ impl<'a> From<Mat> for OpenCVImage<'a> {
 }
 
 pub struct OpenCVCamera {
-    config: CameraConfig,
+    config: Rc<CameraConfig>,
     video_capture: VideoCapture,
 }
 
 impl OpenCVCamera {
-    pub fn new_from_index(
-        index: i32,
+    pub fn new(
+        id: u8,
         pose: Pose,
         fov: (f64, f64),
         focal_length: f64,
@@ -76,30 +76,31 @@ impl OpenCVCamera {
             ));
         }
 
-        Self::new_from_video_capture(video_capture, index, pose, fov, focal_length, sensor_height)
+        let config = CameraConfig {
+            id,
+            pose,
+            fov,
+            focal_length,
+            sensor_height,
+            ..CameraConfig::default()
+        };
+
+        Self::new_with_capture_and_config(video_capture, config)
     }
 
-    pub(crate) fn new_from_video_capture(
+    pub(crate) fn new_with_capture_and_config(
         video_capture: VideoCapture,
-        index: i32,
-        pose: Pose,
-        fov: (f64, f64),
-        focal_length: f64,
-        sensor_height: f64,
+        config: CameraConfig,
     ) -> io::Result<Self> {
         let resolution = (
             video_capture.get(CAP_PROP_FRAME_WIDTH).unwrap() as u32,
             video_capture.get(CAP_PROP_FRAME_HEIGHT).unwrap() as u32,
         );
 
-        let config = CameraConfig {
-            id: index as u8,
+        let config = Rc::new(CameraConfig {
             resolution,
-            pose,
-            fov,
-            focal_length,
-            sensor_height,
-        };
+            ..config
+        });
 
         Ok(Self {
             config,
@@ -109,8 +110,8 @@ impl OpenCVCamera {
 }
 
 impl<'a> Camera<OpenCVImage<'a>> for OpenCVCamera {
-    fn config(&self) -> &CameraConfig {
-        &self.config
+    fn config(&self) -> Rc<CameraConfig> {
+        self.config.clone()
     }
 
     fn grab_frame(&mut self) -> io::Result<Image<OpenCVImage<'a>>> {
@@ -160,14 +161,10 @@ mod tests {
         let cv_image: OpenCVImage = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR)
             .unwrap()
             .into();
-        
-        let config = CameraConfig::default();
 
-        let image = Image::new(
-            std::time::SystemTime::now(),
-            &config,
-            cv_image,
-        );
+        let config = Rc::new(CameraConfig::default());
+
+        let image = Image::new(std::time::SystemTime::now(), config, cv_image);
 
         let cv_pixels = image.as_pixels();
         let cv_raw = &image.as_mat();

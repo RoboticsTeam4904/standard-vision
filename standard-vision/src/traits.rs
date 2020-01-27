@@ -1,11 +1,11 @@
 use crate::types::*;
 use ndarray::{ArrayView3, ArrayViewMut3};
-use std::io;
+use std::{io, rc::Rc};
 
 /// A camera which captures images of type `I`.
 pub trait Camera<I: ImageData> {
     /// Returns the camera's config.
-    fn config(&self) -> &CameraConfig;
+    fn config(&self) -> Rc<CameraConfig>;
 
     /// Calibrates the camera.
     fn calibrate(&self) -> io::Result<()> {

@@ -1,6 +1,7 @@
 use crate::traits::ImageData;
 use std::{
     ops::{Deref, DerefMut},
+    rc::Rc,
     time::SystemTime,
 };
 
@@ -26,14 +27,14 @@ pub struct CameraConfig {
 
 
 /// An image, backed by a generic image data type `I`.
-pub struct Image<'a, I: ImageData> {
+pub struct Image<I: ImageData> {
     pub timestamp: SystemTime,
     pub camera: &'a CameraConfig,
     pub pixels: I,
 }
 
-impl<'a, I: ImageData> Image<'a, I> {
-    pub fn new(timestamp: SystemTime, camera: &'a CameraConfig, pixels: I) -> Self {
+impl<I: ImageData> Image<I> {
+    pub fn new(timestamp: SystemTime, camera: Rc<CameraConfig>, pixels: I) -> Self {
         Self {
             timestamp,
             camera,
@@ -42,7 +43,7 @@ impl<'a, I: ImageData> Image<'a, I> {
     }
 }
 
-impl<'a, I: ImageData> Deref for Image<'a, I> {
+impl<I: ImageData> Deref for Image<I> {
     type Target = I;
 
     fn deref(&self) -> &Self::Target {
@@ -50,7 +51,7 @@ impl<'a, I: ImageData> Deref for Image<'a, I> {
     }
 }
 
-impl<'a, I: ImageData> DerefMut for Image<'a, I> {
+impl<I: ImageData> DerefMut for Image<I> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.pixels
     }
@@ -61,8 +62,8 @@ pub struct Contour {
     pub points: Vec<(u32, u32)>,
 }
 
-pub struct Target<'a> {
-    pub camera: &'a CameraConfig,
+pub struct Target {
+    pub camera: Rc<CameraConfig>,
     pub contours: Vec<Contour>,
     pub theta: f64,
     pub beta: f64,

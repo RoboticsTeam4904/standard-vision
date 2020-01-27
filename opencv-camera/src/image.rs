@@ -8,7 +8,7 @@ pub trait AsMat {
     fn as_mat_mut(&mut self) -> Mat;
 }
 
-impl<'a, I: ImageData> AsMat for Image<'a, I> {
+impl<I: ImageData> AsMat for Image<I> {
     fn as_mat(&self) -> Mat {
         let pixels = self.as_pixels();
 
