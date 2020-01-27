@@ -22,14 +22,15 @@ pub struct CameraConfig {
     pub pose: Pose,
     pub fov: (f64, f64),
     pub focal_length: f64,
+    pub sensor_width: f64,
     pub sensor_height: f64,
+    pub exposure: f64,
 }
-
 
 /// An image, backed by a generic image data type `I`.
 pub struct Image<I: ImageData> {
     pub timestamp: SystemTime,
-    pub camera: &'a CameraConfig,
+    pub camera: Rc<CameraConfig>,
     pub pixels: I,
 }
 

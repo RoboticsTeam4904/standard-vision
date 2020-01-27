@@ -65,14 +65,15 @@ impl OpenCVCamera {
         pose: Pose,
         fov: (f64, f64),
         focal_length: f64,
+        sensor_width: f64,
         sensor_height: f64,
     ) -> io::Result<Self> {
         let mut video_capture = VideoCapture::default().unwrap();
 
-        if !video_capture.open_with_backend(index, CAP_ANY).unwrap() {
+        if !video_capture.open_with_backend(id as i32, CAP_V4L).unwrap() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                format!("Failed to open camera on port {}", index),
+                format!("Failed to open camera on port {} using v4l backend", id),
             ));
         }
 
@@ -81,6 +82,7 @@ impl OpenCVCamera {
             pose,
             fov,
             focal_length,
+            sensor_width,
             sensor_height,
             ..CameraConfig::default()
         };
@@ -97,8 +99,11 @@ impl OpenCVCamera {
             video_capture.get(CAP_PROP_FRAME_HEIGHT).unwrap() as u32,
         );
 
+        let exposure = video_capture.get(CAP_PROP_EXPOSURE).unwrap();
+
         let config = Rc::new(CameraConfig {
             resolution,
+            exposure,
             ..config
         });
 
