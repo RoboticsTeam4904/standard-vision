@@ -1,31 +1,30 @@
-pub mod image;
-
 #[cfg(test)]
 use png;
 
 use std::{io, rc::Rc};
 
-use ndarray::{ArrayView3, ArrayViewMut, ArrayViewMut3};
+use ndarray::{ArrayView3, ArrayViewMut3};
 use opencv::{prelude::*, videoio::*};
-use standard_vision::{
+use stdvis_core::{
     traits::{Camera, ImageData},
     types::{CameraConfig, Image, Pose},
 };
 
-pub struct OpenCVImage<'a> {
+use crate::convert;
+
+pub struct OpenCVImage {
     mat: Mat,
-    pixels: ArrayViewMut3<'a, u8>,
 }
 
-impl<'a> ImageData for OpenCVImage<'a> {
+impl ImageData for OpenCVImage {
     type Inner = Mat;
 
     fn as_pixels(&self) -> ArrayView3<u8> {
-        self.pixels.view()
+        convert::mat_array_view(&self.mat)
     }
 
     fn as_pixels_mut(&mut self) -> ArrayViewMut3<u8> {
-        self.pixels.view_mut()
+        convert::mat_array_view_mut(&mut self.mat)
     }
 
     fn as_raw(&self) -> &Self::Inner {
@@ -34,23 +33,6 @@ impl<'a> ImageData for OpenCVImage<'a> {
 
     fn as_raw_mut(&mut self) -> &mut Self::Inner {
         &mut self.mat
-    }
-}
-
-impl<'a> From<Mat> for OpenCVImage<'a> {
-    fn from(mut mat: Mat) -> Self {
-        let pixels = unsafe {
-            ArrayViewMut::from_shape_ptr(
-                (
-                    mat.rows().unwrap() as usize,
-                    mat.cols().unwrap() as usize,
-                    mat.channels().unwrap() as usize,
-                ),
-                mat.ptr_mut(0).unwrap(),
-            )
-        };
-
-        OpenCVImage { mat, pixels }
     }
 }
 
@@ -114,12 +96,12 @@ impl OpenCVCamera {
     }
 }
 
-impl<'a> Camera<OpenCVImage<'a>> for OpenCVCamera {
+impl Camera<OpenCVImage> for OpenCVCamera {
     fn config(&self) -> Rc<CameraConfig> {
         self.config.clone()
     }
 
-    fn grab_frame(&mut self) -> io::Result<Image<OpenCVImage<'a>>> {
+    fn grab_frame(&mut self) -> io::Result<Image<OpenCVImage>> {
         let mut mat = Mat::default().unwrap();
         if !self.video_capture.read(&mut mat).unwrap() {
             return Err(io::Error::new(
@@ -134,7 +116,7 @@ impl<'a> Camera<OpenCVImage<'a>> for OpenCVCamera {
         Ok(Image::new(
             std::time::SystemTime::now(),
             self.config(),
-            mat.into(),
+            OpenCVImage { mat }
         ))
     }
 }
@@ -149,7 +131,7 @@ mod tests {
         use opencv::{core::Vec3, imgcodecs};
         use std::fs::File;
 
-        use image::AsMat;
+        use crate::convert::AsMat;
 
         const PATH: &str = "tests/images/rand.png";
 

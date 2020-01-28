@@ -1,12 +1,12 @@
 [package]
-name = "opencv-camera"
+name = "stdvis-camera"
 version = "0.1.0"
 authors = []
 edition = "2018"
 
 [dependencies]
 opencv = { version = "0.29", default-features = false, features = ["opencv-4"] }
-standard-vision = { path = "../standard-vision" }
+stdvis-core = { path = "../stdvis-core" }
 ndarray = "0.13.0"
 
 [dev-dependencies]

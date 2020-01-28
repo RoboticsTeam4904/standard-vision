@@ -1,7 +1,32 @@
-use ndarray::prelude::*;
+use ndarray::{ArrayView3, ArrayViewMut3, prelude::*};
 use opencv::prelude::*;
+use stdvis_core::{traits::ImageData, types::Image};
 
-use standard_vision::{traits::ImageData, types::Image};
+pub fn mat_array_view<'a>(mat: &'a Mat) -> ArrayView3<'a, u8> {
+    unsafe {
+        ArrayView::from_shape_ptr(
+            (
+                mat.rows().unwrap() as usize,
+                mat.cols().unwrap() as usize,
+                mat.channels().unwrap() as usize,
+            ),
+            mat.ptr(0).unwrap(),
+        )
+    }
+}
+
+pub fn mat_array_view_mut<'a>(mat: &'a mut Mat) -> ArrayViewMut3<'a, u8> {
+    unsafe {
+        ArrayViewMut::from_shape_ptr(
+            (
+                mat.rows().unwrap() as usize,
+                mat.cols().unwrap() as usize,
+                mat.channels().unwrap() as usize,
+            ),
+            mat.ptr_mut(0).unwrap(),
+        )
+    }
+}
 
 pub trait AsMat {
     fn as_mat(&self) -> Mat;
