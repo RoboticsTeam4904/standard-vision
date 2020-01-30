@@ -10,7 +10,7 @@ use stdvis_core::{
     types::{CameraConfig, Image, Pose},
 };
 
-use crate::convert;
+use crate::convert::AsArrayView;
 
 pub struct OpenCVImage {
     mat: Mat,
@@ -20,11 +20,11 @@ impl ImageData for OpenCVImage {
     type Inner = Mat;
 
     fn as_pixels(&self) -> ArrayView3<u8> {
-        convert::mat_array_view(&self.mat)
+        self.mat.as_array_view()
     }
 
     fn as_pixels_mut(&mut self) -> ArrayViewMut3<u8> {
-        convert::mat_array_view_mut(&mut self.mat)
+        self.mat.as_array_view_mut()
     }
 
     fn as_raw(&self) -> &Self::Inner {
@@ -52,7 +52,7 @@ impl OpenCVCamera {
     ) -> io::Result<Self> {
         let mut video_capture = VideoCapture::default().unwrap();
 
-        if !video_capture.open_with_backend(id as i32, CAP_V4L).unwrap() {
+        if !video_capture.open_with_backend(id as i32, CAP_ANY).unwrap() {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
                 format!("Failed to open camera on port {} using v4l backend", id),
@@ -116,7 +116,7 @@ impl Camera<OpenCVImage> for OpenCVCamera {
         Ok(Image::new(
             std::time::SystemTime::now(),
             self.config(),
-            OpenCVImage { mat }
+            OpenCVImage { mat },
         ))
     }
 }
@@ -145,9 +145,9 @@ mod tests {
             .map(|items| [items[2], items[1], items[0]])
             .collect::<Vec<_>>();
 
-        let cv_image: OpenCVImage = imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR)
-            .unwrap()
-            .into();
+        let cv_image = OpenCVImage {
+            mat: imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap(),
+        };
 
         let config = Rc::new(CameraConfig::default());
 
