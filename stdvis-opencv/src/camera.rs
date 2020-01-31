@@ -3,7 +3,7 @@ use png;
 
 use std::{io, rc::Rc};
 
-use ndarray::{ArrayView3, ArrayViewMut3};
+use ndarray::{ArrayViewD, ArrayViewMutD};
 use opencv::{prelude::*, videoio::*};
 use stdvis_core::{
     traits::{Camera, ImageData},
@@ -19,11 +19,11 @@ pub struct OpenCVImage {
 impl ImageData for OpenCVImage {
     type Inner = Mat;
 
-    fn as_pixels(&self) -> ArrayView3<u8> {
+    fn as_pixels(&self) -> ArrayViewD<u8> {
         self.mat.as_array_view()
     }
 
-    fn as_pixels_mut(&mut self) -> ArrayViewMut3<u8> {
+    fn as_pixels_mut(&mut self) -> ArrayViewMutD<u8> {
         self.mat.as_array_view_mut()
     }
 
@@ -131,7 +131,7 @@ mod tests {
         use opencv::{core::Vec3, imgcodecs};
         use std::fs::File;
 
-        use crate::convert::AsMat;
+        use crate::convert::AsMatView;
 
         const PATH: &str = "tests/images/rand.png";
 
@@ -154,7 +154,7 @@ mod tests {
         let image = Image::new(std::time::SystemTime::now(), config, cv_image);
 
         let cv_pixels = image.as_pixels();
-        let cv_raw = &image.as_mat();
+        let cv_raw = &image.as_mat_view();
 
         assert_eq!(
             cv_pixels.shape(),
