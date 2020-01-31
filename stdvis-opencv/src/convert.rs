@@ -73,7 +73,7 @@ impl<'mat> DerefMut for MatView<'mat> {
 }
 
 pub trait AsMatView {
-    fn as_mat_view(&self) -> MatView;
+    fn as_mat_view(&self, channels: u32) -> MatView;
 }
 
 impl<S, D> AsMatView for ArrayBase<S, D>
@@ -81,12 +81,12 @@ where
     S: RawData,
     D: Dimension,
 {
-    fn as_mat_view(&self) -> MatView {
-        // FIXME: Don't assume channels are present
-
+    fn as_mat_view(&self, channels: u32) -> MatView {
         let mut sizes = VectorOfint::from_iter(self.shape().iter().map(|size| size.to_owned() as i32));
-        let last_size = sizes.to_slice().last().unwrap().to_owned();
-        sizes.remove(sizes.len() - 1).unwrap();
+
+        if channels > 0 {
+            sizes.remove(sizes.len() - 1).unwrap();
+        }
 
         let strides = self
             .strides()
@@ -99,7 +99,7 @@ where
                 &sizes,
                 opencv::core::CV_MAKETYPE(
                     opencv::core::CV_8U,
-                    last_size,
+                    channels as i32,
                 ),
                 unsafe { &mut *(self.as_ptr() as *mut std::ffi::c_void) },
                 &strides,
@@ -110,8 +110,8 @@ where
 }
 
 impl<I: ImageData> AsMatView for Image<I> {
-    fn as_mat_view(&self) -> MatView {
-        MatView::new(self.as_pixels().as_mat_view().into())
+    fn as_mat_view(&self, channels: u32) -> MatView {
+        MatView::new(self.as_pixels().as_mat_view(channels).into())
     }
 }
 
