@@ -1,5 +1,5 @@
 use crate::types::*;
-use ndarray::{ArrayView3, ArrayViewMut3};
+use ndarray::{ArrayViewD, ArrayViewMutD};
 use std::{io, rc::Rc};
 
 /// A camera which captures images of type `I`.
@@ -22,10 +22,10 @@ pub trait ImageData {
     type Inner;
 
     /// Returns the image data as an array view of pixels.
-    fn as_pixels(&self) -> ArrayView3<u8>;
+    fn as_pixels(&self) -> ArrayViewD<u8>;
 
     /// Returns the image data as a mutable array view of pixels.
-    fn as_pixels_mut(&mut self) -> ArrayViewMut3<u8>;
+    fn as_pixels_mut(&mut self) -> ArrayViewMutD<u8>;
 
     /// Returns a reference to the underlying image data.
     fn as_raw(&self) -> &Self::Inner;

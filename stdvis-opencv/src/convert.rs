@@ -7,8 +7,6 @@ use ndarray::{prelude::*, ArrayViewD, ArrayViewMutD, Dimension, RawData};
 use opencv::{prelude::*, types::VectorOfint};
 use stdvis_core::{traits::ImageData, types::Image};
 
-// TODO: Make conversions generalizable to n-dimensions, rather than only 3D.
-
 pub trait AsArrayView {
     fn mat_dims(&self) -> IxDyn;
     fn as_array_view(&self) -> ArrayView<u8, IxDyn>;
@@ -20,9 +18,7 @@ impl AsArrayView for Mat {
         let size = self.mat_size().unwrap();
         let ndims = size.dims().unwrap() as usize;
         let mut dim_sizes = (0..ndims).map(|d| size[d] as usize).collect::<Vec<_>>();
-        let channels = ((self.typ().unwrap() - opencv::core::CV_MAT_DEPTH(opencv::core::CV_8U))
-            >> opencv::core::CV_CN_SHIFT)
-            + 1;
+        let channels = self.channels().unwrap();
         
         if channels > 0 { dim_sizes.push(channels as usize); }
 
