@@ -154,7 +154,7 @@ mod tests {
         let image = Image::new(std::time::SystemTime::now(), config, cv_image);
 
         let cv_pixels = image.as_pixels();
-        let cv_raw = &image.as_mat_view(3);
+        let cv_raw = &image.as_mat_view();
 
         assert_eq!(
             cv_pixels.shape(),
