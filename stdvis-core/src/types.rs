@@ -5,8 +5,10 @@ use std::{
     time::SystemTime,
 };
 
+use serde::{Serialize, Deserialize};
+
 /// A representation of a relative position and rotation.
-#[derive(Default)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Pose {
     pub x: i32,
     pub y: i32,
@@ -15,7 +17,7 @@ pub struct Pose {
 }
 
 /// A collection of camera properties.
-#[derive(Default)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct CameraConfig {
     pub id: u8,
     pub resolution: (u32, u32),
@@ -63,9 +65,10 @@ pub struct Contour {
     pub points: Vec<(u32, u32)>,
 }
 
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct Target {
+    #[serde(skip)]
     pub camera: Rc<CameraConfig>,
-    pub contours: Vec<Contour>,
     pub theta: f64,
     pub beta: f64,
     pub dist: f64,

@@ -94,6 +94,25 @@ impl OpenCVCamera {
             video_capture,
         })
     }
+
+    pub(crate) fn set_config(&mut self, config: CameraConfig) {
+        self.config = Rc::new(config);
+    }
+
+    pub fn set_exposure(&mut self, exposure: f64) -> opencv::Result<bool> {
+        self.video_capture
+            .set(CAP_PROP_EXPOSURE, exposure)
+            .and_then(|res| {
+                self.video_capture.get(CAP_PROP_EXPOSURE).map(|exposure| {
+                    self.set_config(CameraConfig {
+                        exposure,
+                        ..self.config().as_ref().clone()
+                    });
+
+                    res
+                })
+            })
+    }
 }
 
 impl Camera<OpenCVImage> for OpenCVCamera {
