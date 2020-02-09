@@ -12,11 +12,17 @@ use stdvis_core::{
 
 use crate::convert::AsArrayView;
 
-pub struct OpenCVImage {
+pub struct MatImageData {
     mat: Mat,
 }
 
-impl ImageData for OpenCVImage {
+impl MatImageData {
+    pub fn new(mat: Mat) -> Self {
+        Self { mat }
+    }
+}
+
+impl ImageData for MatImageData {
     type Inner = Mat;
 
     fn as_pixels(&self) -> ArrayViewD<u8> {
@@ -115,12 +121,12 @@ impl OpenCVCamera {
     }
 }
 
-impl Camera<OpenCVImage> for OpenCVCamera {
+impl Camera<MatImageData> for OpenCVCamera {
     fn config(&self) -> Rc<CameraConfig> {
         self.config.clone()
     }
 
-    fn grab_frame(&mut self) -> io::Result<Image<OpenCVImage>> {
+    fn grab_frame(&mut self) -> io::Result<Image<MatImageData>> {
         let mut mat = Mat::default().unwrap();
         if !self.video_capture.read(&mut mat).unwrap() {
             return Err(io::Error::new(
@@ -135,7 +141,7 @@ impl Camera<OpenCVImage> for OpenCVCamera {
         Ok(Image::new(
             std::time::SystemTime::now(),
             self.config(),
-            OpenCVImage { mat },
+            MatImageData::new(mat),
         ))
     }
 }
@@ -164,9 +170,7 @@ mod tests {
             .map(|items| [items[2], items[1], items[0]])
             .collect::<Vec<_>>();
 
-        let cv_image = OpenCVImage {
-            mat: imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap(),
-        };
+        let cv_image = MatImageData::new(imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap());
 
         let config = Rc::new(CameraConfig::default());
 
