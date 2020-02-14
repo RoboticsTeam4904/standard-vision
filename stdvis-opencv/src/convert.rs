@@ -1,6 +1,7 @@
 use std::{
     marker::PhantomData,
     ops::{Deref, DerefMut},
+    borrow::{Borrow, BorrowMut},
 };
 
 use ndarray::{prelude::*, RawData};
@@ -77,6 +78,18 @@ impl<'mat> DerefMut for MatView<'mat> {
     }
 }
 
+impl<'mat> Borrow<Mat> for MatView<'mat> {
+    fn borrow(&self) -> &Mat {
+        &self.mat
+    }
+}
+
+impl<'mat> BorrowMut<Mat> for MatView<'mat> {
+    fn borrow_mut(&mut self) -> &mut Mat {
+        &mut self.mat
+    }
+}
+
 pub trait AsMatView {
     fn as_mat_view(&self) -> MatView;
 }
@@ -117,7 +130,7 @@ where
     }
 }
 
-impl<I: ImageData> AsMatView for Image<I> {
+impl<'src, I: ImageData> AsMatView for Image<'src, I> {
     fn as_mat_view(&self) -> MatView {
         MatView::new(self.as_pixels().as_mat_view().into())
     }

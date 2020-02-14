@@ -1,13 +1,13 @@
 #[cfg(test)]
 use png;
 
-use std::{io, rc::Rc};
+use std::io;
 
 use ndarray::{ArrayViewD, ArrayViewMutD};
 use opencv::{prelude::*, videoio::*};
 use stdvis_core::{
     traits::{Camera, ImageData},
-    types::{CameraConfig, Image, Pose},
+    types::{CameraConfig, Image},
 };
 
 use crate::convert::AsArrayView;
@@ -43,57 +43,16 @@ impl ImageData for MatImageData {
 }
 
 pub struct OpenCVCamera {
-    config: Rc<CameraConfig>,
+    config: CameraConfig,
     video_capture: VideoCapture,
 }
 
 impl OpenCVCamera {
-    pub fn new(
-        id: u8,
-        pose: Pose,
-        fov: (f64, f64),
-        focal_length: f64,
-        sensor_width: f64,
-        sensor_height: f64,
-    ) -> io::Result<Self> {
+    pub fn new(config: CameraConfig) -> opencv::Result<Self> {
+        let id = config.id;
         let mut video_capture = VideoCapture::default().unwrap();
 
-        if !video_capture.open_with_backend(id as i32, CAP_ANY).unwrap() {
-            return Err(io::Error::new(
-                io::ErrorKind::NotFound,
-                format!("Failed to open camera on port {} using v4l backend", id),
-            ));
-        }
-
-        let config = CameraConfig {
-            id,
-            pose,
-            fov,
-            focal_length,
-            sensor_width,
-            sensor_height,
-            ..CameraConfig::default()
-        };
-
-        Self::new_with_capture_and_config(video_capture, config)
-    }
-
-    pub(crate) fn new_with_capture_and_config(
-        video_capture: VideoCapture,
-        config: CameraConfig,
-    ) -> io::Result<Self> {
-        let resolution = (
-            video_capture.get(CAP_PROP_FRAME_WIDTH).unwrap() as u32,
-            video_capture.get(CAP_PROP_FRAME_HEIGHT).unwrap() as u32,
-        );
-
-        let exposure = video_capture.get(CAP_PROP_EXPOSURE).unwrap();
-
-        let config = Rc::new(CameraConfig {
-            resolution,
-            exposure,
-            ..config
-        });
+        video_capture.open_with_backend(id as i32, CAP_ANY)?;
 
         Ok(Self {
             config,
@@ -101,29 +60,18 @@ impl OpenCVCamera {
         })
     }
 
-    pub(crate) fn set_config(&mut self, config: CameraConfig) {
-        self.config = Rc::new(config);
+    pub fn exposure(&self) -> opencv::Result<f64> {
+        self.video_capture.get(CAP_PROP_EXPOSURE)
     }
 
     pub fn set_exposure(&mut self, exposure: f64) -> opencv::Result<bool> {
-        self.video_capture
-            .set(CAP_PROP_EXPOSURE, exposure)
-            .and_then(|res| {
-                self.video_capture.get(CAP_PROP_EXPOSURE).map(|exposure| {
-                    self.set_config(CameraConfig {
-                        exposure,
-                        ..self.config().as_ref().clone()
-                    });
-
-                    res
-                })
-            })
+        self.video_capture.set(CAP_PROP_EXPOSURE, exposure)
     }
 }
 
 impl Camera<MatImageData> for OpenCVCamera {
-    fn config(&self) -> Rc<CameraConfig> {
-        self.config.clone()
+    fn config(&self) -> &CameraConfig {
+        &self.config
     }
 
     fn grab_frame(&mut self) -> io::Result<Image<MatImageData>> {
@@ -172,9 +120,8 @@ mod tests {
 
         let cv_image = MatImageData::new(imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap());
 
-        let config = Rc::new(CameraConfig::default());
-
-        let image = Image::new(std::time::SystemTime::now(), config, cv_image);
+        let config = CameraConfig::default();
+        let image = Image::new(std::time::SystemTime::now(), &config, cv_image);
 
         let cv_pixels = image.as_pixels();
         let cv_raw = &image.as_mat_view();

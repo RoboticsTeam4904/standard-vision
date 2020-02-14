@@ -1,16 +1,11 @@
 use crate::types::*;
 use ndarray::{ArrayViewD, ArrayViewMutD};
-use std::{io, rc::Rc};
+use std::io;
 
 /// A camera which captures images of type `I`.
 pub trait Camera<I: ImageData> {
     /// Returns the camera's config.
-    fn config(&self) -> Rc<CameraConfig>;
-
-    /// Calibrates the camera.
-    fn calibrate(&self) -> io::Result<()> {
-        Ok(())
-    }
+    fn config(&self) -> &CameraConfig;
 
     /// Grabs next image from the camera.
     fn grab_frame(&mut self) -> io::Result<Image<I>>;
@@ -34,12 +29,15 @@ pub trait ImageData {
     fn as_raw_mut(&mut self) -> &mut Self::Inner;
 }
 
-/// An interface that extracts contours from an `Image`.
+/// An interface that extracts contour groups from an `Image`.
 pub trait ContourExtractor {
-    fn extract_from<I: ImageData>(&self, image: &Image<I>) -> Vec<Contour>;
+    fn extract_from<'cam, I: ImageData>(
+        &'cam self,
+        image: &Image<'cam, I>,
+    ) -> Vec<ContourGroup<'cam>>;
 }
 
-/// An interface that computes `Target`s given a number of `Contour`s.
+/// An interface that computes a `Target` given a `ContourGroup`.
 pub trait ContourAnalyzer {
-    fn analyze(&self, config: &CameraConfig, contours: &Vec<Contour>) -> Vec<Target>;
+    fn analyze(&self, contours: &ContourGroup) -> Target;
 }
