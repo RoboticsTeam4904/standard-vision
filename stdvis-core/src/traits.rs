@@ -31,10 +31,10 @@ pub trait ImageData {
 
 /// An interface that extracts contour groups from an `Image`.
 pub trait ContourExtractor {
-    fn extract_from<'cam, I: ImageData>(
-        &'cam self,
-        image: &Image<'cam, I>,
-    ) -> Vec<ContourGroup<'cam>>;
+    fn extract_from<'src, I: ImageData>(
+        &'src self,
+        image: &Image<'src, I>,
+    ) -> Vec<ContourGroup<'src>>;
 }
 
 /// An interface that computes a `Target` given a `ContourGroup`.
