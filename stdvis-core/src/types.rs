@@ -11,8 +11,9 @@ use crate::traits::ImageData;
 /// A representation of a relative position and rotation.
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Pose {
-    pub dist: f64,
     pub angle: f64,
+    pub dist: f64,
+    pub height: f64,
     pub yaw: f64,
     pub pitch: f64,
     pub roll: f64,
