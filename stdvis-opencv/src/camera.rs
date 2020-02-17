@@ -52,7 +52,13 @@ impl OpenCVCamera {
         let id = config.id;
         let mut video_capture = VideoCapture::default().unwrap();
 
-        video_capture.open_with_backend(id as i32, CAP_ANY)?;
+        video_capture.open_with_backend(id as i32, {
+            if cfg!(target_os = "linux") {
+                CAP_V4L
+            } else {
+                CAP_ANY
+            }
+        })?;
 
         Ok(Self {
             config,
