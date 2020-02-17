@@ -65,6 +65,7 @@ impl OpenCVCamera {
     }
 
     pub fn set_exposure(&mut self, exposure: f64) -> opencv::Result<bool> {
+        self.video_capture.set(CAP_PROP_AUTO_EXPOSURE, 1.)?;
         self.video_capture.set(CAP_PROP_EXPOSURE, exposure)
     }
 }
