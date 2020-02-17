@@ -64,7 +64,7 @@ impl<'src, I: ImageData> DerefMut for Image<'src, I> {
 /// A collection of points that form a contour.
 #[derive(Debug)]
 pub struct Contour {
-    pub points: Vec<(u32, u32)>,
+    pub points: Vec<(f32, f32)>,
 }
 
 /// A collection of contours that form a logical group.
