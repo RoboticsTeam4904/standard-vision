@@ -60,8 +60,8 @@ impl OpenCVCamera {
             }
         })?;
 
-        video_capture.set(CAP_PROP_FRAME_WIDTH, config.resolution.0 as f64)?;
-        video_capture.set(CAP_PROP_FRAME_HEIGHT, config.resolution.1 as f64)?;
+        // video_capture.set(CAP_PROP_FRAME_WIDTH, config.resolution.0 as f64)?;
+        // video_capture.set(CAP_PROP_FRAME_HEIGHT, config.resolution.1 as f64)?;
 
         Ok(Self {
             config,
