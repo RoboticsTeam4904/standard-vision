@@ -50,7 +50,7 @@ pub struct OpenCVCamera {
 impl OpenCVCamera {
     pub fn new(config: CameraConfig) -> opencv::Result<Self> {
         let id = config.id;
-        let mut video_capture = VideoCapture::default().unwrap();
+        let mut video_capture = VideoCapture::default()?;
 
         video_capture.open_with_backend(id as i32, {
             if cfg!(target_os = "linux") {
@@ -59,6 +59,9 @@ impl OpenCVCamera {
                 CAP_ANY
             }
         })?;
+
+        video_capture.set(CAP_PROP_FRAME_WIDTH, config.resolution.0 as f64)?;
+        video_capture.set(CAP_PROP_FRAME_HEIGHT, config.resolution.1 as f64)?;
 
         Ok(Self {
             config,
