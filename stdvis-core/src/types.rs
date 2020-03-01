@@ -1,6 +1,6 @@
 use std::{
     ops::{Deref, DerefMut},
-    time::SystemTime,
+    time::Instant,
 };
 
 use ndarray::{Array1, Array2};
@@ -32,13 +32,13 @@ pub struct CameraConfig {
 
 /// An image, backed by a generic image data type `I`.
 pub struct Image<'src, I: ImageData> {
-    pub timestamp: SystemTime,
+    pub timestamp: Instant,
     pub camera: &'src CameraConfig,
     pub pixels: I,
 }
 
 impl<'src, I: ImageData> Image<'src, I> {
-    pub fn new(timestamp: SystemTime, camera: &'src CameraConfig, pixels: I) -> Self {
+    pub fn new(timestamp: Instant, camera: &'src CameraConfig, pixels: I) -> Self {
         Self {
             timestamp,
             camera,
