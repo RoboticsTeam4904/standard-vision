@@ -94,7 +94,7 @@ impl Camera<MatImageData> for OpenCVCamera {
         }
 
         Ok(Image::new(
-            std::time::SystemTime::now(),
+            std::time::Instant::now(),
             self.config(),
             MatImageData::new(mat),
         ))
@@ -128,7 +128,7 @@ mod tests {
         let cv_image = MatImageData::new(imgcodecs::imread(PATH, imgcodecs::IMREAD_COLOR).unwrap());
 
         let config = CameraConfig::default();
-        let image = Image::new(std::time::SystemTime::now(), &config, cv_image);
+        let image = Image::new(std::time::Instant::now(), &config, cv_image);
 
         let cv_pixels = image.as_pixels();
         let cv_raw = &image.as_mat_view();
