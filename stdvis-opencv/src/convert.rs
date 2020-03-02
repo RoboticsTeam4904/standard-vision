@@ -5,7 +5,7 @@ use std::{
 };
 
 use ndarray::{prelude::*, RawData};
-use opencv::{prelude::*, types::VectorOfint};
+use opencv::prelude::*;
 use stdvis_core::{traits::ImageData, types::Image};
 
 pub trait AsArrayView {
@@ -14,7 +14,7 @@ pub trait AsArrayView {
 }
 
 fn mat_dims(mat: &Mat) -> IxDyn {
-    let size = mat.mat_size().unwrap();
+    let size = mat.mat_size();
     let ndims = size.dims().unwrap() as usize;
     let mut dim_sizes = (0..ndims).map(|d| size[d] as usize).collect::<Vec<_>>();
 
@@ -120,10 +120,11 @@ where
 
         MatView::new(
             Mat::new_nd_with_data(
-                &VectorOfint::from_iter(sizes),
+                &sizes,
                 typ,
                 unsafe { &mut *(self.as_ptr() as *mut std::ffi::c_void) },
-                &strides,
+                // TODO: New version of `opencv` uses only one stride...
+                &strides[0],
             )
             .unwrap(),
         )

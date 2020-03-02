@@ -50,9 +50,7 @@ pub struct OpenCVCamera {
 impl OpenCVCamera {
     pub fn new(config: CameraConfig) -> opencv::Result<Self> {
         let id = config.id;
-        let mut video_capture = VideoCapture::default()?;
-
-        video_capture.open_with_backend(id as i32, {
+        let video_capture = VideoCapture::new(id as i32, {
             if cfg!(target_os = "linux") {
                 CAP_V4L
             } else {
@@ -139,8 +137,8 @@ mod tests {
         assert_eq!(
             cv_pixels.shape(),
             [
-                cv_raw.rows().unwrap() as usize,
-                cv_raw.cols().unwrap() as usize,
+                cv_raw.rows() as usize,
+                cv_raw.cols() as usize,
                 cv_raw.channels().unwrap() as usize,
             ]
         );
