@@ -5,9 +5,14 @@ authors = []
 edition = "2018"
 
 [dependencies]
-opencv = { version = "0.29", default-features = false, features = ["opencv-4"] }
 stdvis-core = { path = "../stdvis-core" }
 ndarray = "0.13.0"
+
+[target.'cfg(linux)'.dependencies]
+opencv = { version = "0.30", default-features = false, features = ["opencv-4"] }
+
+[target.'cfg(not(linux))'.dependencies]
+opencv = { version = "0.30", default-features = false, features = ["opencv-4", "buildtime-bindgen"] }
 
 [dev-dependencies]
 png = "^0.15.2"
