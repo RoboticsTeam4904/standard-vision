@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 ndarray = { version = "0.13.0", features = ["serde"] }
 serde = { version = "1.0", features = ["derive", "rc"] }
+anyhow = "1.0"

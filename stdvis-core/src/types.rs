@@ -4,7 +4,7 @@ use std::{
 };
 
 use ndarray::{Array1, Array2};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::traits::ImageData;
 

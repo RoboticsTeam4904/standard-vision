@@ -1,6 +1,9 @@
-use crate::types::*;
-use ndarray::{ArrayViewD, ArrayViewMutD};
 use std::io;
+
+use anyhow::Result;
+use ndarray::{ArrayViewD, ArrayViewMutD};
+
+use crate::types::*;
 
 /// A camera which captures images of type `I`.
 pub trait Camera<I: ImageData> {
@@ -34,10 +37,10 @@ pub trait ContourExtractor {
     fn extract_from<'src, I: ImageData>(
         &'src self,
         image: &Image<'src, I>,
-    ) -> Vec<ContourGroup<'src>>;
+    ) -> Result<Vec<ContourGroup<'src>>>;
 }
 
 /// An interface that computes a `Target` given a `ContourGroup`.
 pub trait ContourAnalyzer {
-    fn analyze(&self, contours: &ContourGroup) -> Target;
+    fn analyze(&self, contours: &ContourGroup) -> Result<Target>;
 }
