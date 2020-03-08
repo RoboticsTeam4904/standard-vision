@@ -3,13 +3,15 @@ use std::{
     time::Instant,
 };
 
+use mincodec::MinCodec;
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
 
 use crate::traits::ImageData;
 
 /// A representation of a relative position and rotation.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct Pose {
     pub angle: f64,
     pub dist: f64,
@@ -20,7 +22,8 @@ pub struct Pose {
 }
 
 /// A collection of camera properties.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct CameraConfig {
     pub id: u8,
     pub resolution: (u32, u32),
@@ -75,8 +78,9 @@ pub struct ContourGroup<'src> {
     pub contours: Vec<Contour>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
-pub struct Target {
+#[derive(Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, MinCodec)]
+pub struct VisionTarget {
     pub id: u8,
     pub beta: f64,
     pub theta: f64,

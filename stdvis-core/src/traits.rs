@@ -40,7 +40,7 @@ pub trait ContourExtractor {
     ) -> Result<Vec<ContourGroup<'src>>>;
 }
 
-/// An interface that computes a `Target` given a `ContourGroup`.
+/// An interface that computes a `VisionTarget` given a `ContourGroup`.
 pub trait ContourAnalyzer {
-    fn analyze(&self, contours: &ContourGroup) -> Result<Target>;
+    fn analyze(&self, contours: &ContourGroup) -> Result<VisionTarget>;
 }
