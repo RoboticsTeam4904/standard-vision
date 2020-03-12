@@ -77,12 +77,14 @@ impl OpenCVCamera {
     }
 }
 
-impl Camera<MatImageData> for OpenCVCamera {
+impl Camera for OpenCVCamera {
+    type ImageStorage = MatImageData;
+
     fn config(&self) -> &CameraConfig {
         &self.config
     }
 
-    fn grab_frame(&mut self) -> io::Result<Image<MatImageData>> {
+    fn grab_frame(&mut self) -> io::Result<Image<Self::ImageStorage>> {
         let mut mat = Mat::default().unwrap();
         if !self.video_capture.read(&mut mat).unwrap() {
             return Err(io::Error::new(

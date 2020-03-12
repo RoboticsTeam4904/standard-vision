@@ -5,13 +5,15 @@ use ndarray::{ArrayViewD, ArrayViewMutD};
 
 use crate::types::*;
 
-/// A camera which captures images of type `I`.
-pub trait Camera<I: ImageData> {
+/// A camera which captures images backed by a given `DataSource`.
+pub trait Camera {
+    type ImageStorage: ImageData;
+
     /// Returns the camera's config.
     fn config(&self) -> &CameraConfig;
 
     /// Grabs next image from the camera.
-    fn grab_frame(&mut self) -> io::Result<Image<I>>;
+    fn grab_frame(&mut self) -> io::Result<Image<Self::ImageStorage>>;
 }
 
 /// A generalized format for image data.

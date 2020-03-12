@@ -34,10 +34,10 @@ pub struct CameraConfig {
 }
 
 /// An image, backed by a generic image data type `I`.
-pub struct Image<'src, I: ImageData> {
+pub struct Image<'src, Storage: ImageData> {
     pub timestamp: Instant,
     pub camera: &'src CameraConfig,
-    pub pixels: I,
+    pub pixels: Storage,
 }
 
 impl<'src, I: ImageData> Image<'src, I> {
