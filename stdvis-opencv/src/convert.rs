@@ -15,10 +15,10 @@ pub trait AsArrayView {
 
 fn mat_dims(mat: &Mat) -> IxDyn {
     let size = mat.mat_size();
-    let ndims = size.dims().unwrap() as usize;
+    let ndims = size.dims() as usize;
     let mut dim_sizes = (0..ndims).map(|d| size[d] as usize).collect::<Vec<_>>();
 
-    let channels = mat.channels().unwrap();
+    let channels = mat.channels();
     dim_sizes.push(channels as usize);
 
     IxDyn(&dim_sizes)
@@ -119,14 +119,14 @@ where
             .collect::<Vec<_>>();
 
         MatView::new(
-            Mat::new_nd_with_data(
+        unsafe{Mat::new_nd_with_data(
                 &sizes,
                 typ,
-                unsafe { &mut *(self.as_ptr() as *mut std::ffi::c_void) },
+                &mut *(self.as_ptr() as *mut std::ffi::c_void),
                 // TODO: New version of `opencv` uses only one stride...
-                &strides[0],
+            Some(&strides),
             )
-            .unwrap(),
+            .unwrap()},
         )
     }
 }
