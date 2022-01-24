@@ -85,7 +85,7 @@ impl Camera for OpenCVCamera {
     }
 
     fn grab_frame(&mut self) -> io::Result<Image<Self::ImageStorage>> {
-        let mut mat = Mat::default().unwrap();
+        let mut mat = Mat::default();
         if !self.video_capture.read(&mut mat).unwrap() {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn test_mat_pixel_extraction() {
         use ndarray::s;
-        use opencv::{core::Vec3, imgcodecs};
+        use opencv::{core::Vec3b, imgcodecs};
         use std::fs::File;
 
         use crate::convert::AsMatView;
@@ -141,7 +141,7 @@ mod tests {
             [
                 cv_raw.rows() as usize,
                 cv_raw.cols() as usize,
-                cv_raw.channels().unwrap() as usize,
+                cv_raw.channels() as usize,
             ]
         );
 
@@ -156,7 +156,7 @@ mod tests {
                 );
 
                 assert_eq!(
-                    **cv_raw.at_2d::<Vec3<u8>>(row as i32, col as i32).unwrap(),
+                    **cv_raw.at_2d::<Vec3b>(row as i32, col as i32).unwrap(),
                     expected_pixel
                 );
             }
