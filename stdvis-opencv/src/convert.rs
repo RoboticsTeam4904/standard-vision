@@ -1,7 +1,7 @@
 use std::{
+    borrow::{Borrow, BorrowMut},
     marker::PhantomData,
     ops::{Deref, DerefMut},
-    borrow::{Borrow, BorrowMut},
 };
 
 use ndarray::{prelude::*, RawData};
@@ -118,16 +118,16 @@ where
             .map(|stride| stride.to_owned() as usize)
             .collect::<Vec<_>>();
 
-        MatView::new(
-        unsafe{Mat::new_nd_with_data(
+        MatView::new(unsafe {
+            Mat::new_nd_with_data(
                 &sizes,
                 typ,
                 &mut *(self.as_ptr() as *mut std::ffi::c_void),
                 // TODO: New version of `opencv` uses only one stride...
-            Some(&strides),
+                Some(&strides),
             )
-            .unwrap()},
-        )
+            .unwrap()
+        })
     }
 }
 
