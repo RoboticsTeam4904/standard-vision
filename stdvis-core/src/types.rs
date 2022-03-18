@@ -76,7 +76,7 @@ pub struct ContourGroup<'src> {
     pub contours: Vec<Contour>,
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize, MinCodec)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, MinCodec, PartialEq)]
 pub struct VisionTarget {
     pub id: u8,
     pub beta: f64,
