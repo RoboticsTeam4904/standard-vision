@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "stdvis/core",
+    "stdvis/opencv",
+]

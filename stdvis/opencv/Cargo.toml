@@ -2,12 +2,12 @@
 name = "stdvis-opencv"
 version = "0.1.0"
 authors = []
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-stdvis-core = { path = "../stdvis-core" }
+stdvis-core = { path = "../core" }
 ndarray = "0.13.0"
-opencv = "0.62"
+opencv = "0.63.0"
 
 [dev-dependencies]
 png = "^0.15.2"
