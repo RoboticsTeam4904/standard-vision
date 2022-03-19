@@ -2,4 +2,5 @@
 members = [
     "stdvis/core",
     "stdvis/opencv",
+    "tools/cli",
 ]
