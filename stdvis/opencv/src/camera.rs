@@ -78,7 +78,7 @@ impl OcvCamera {
         .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
         #[cfg(feature = "cuda")]
-        let video_source = create_video_reader(&format!("/dev/video{}", id), false)
+        let video_source = create_video_reader(&device_path, false)
             .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
         Ok(Self {
