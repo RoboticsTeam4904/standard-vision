@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.56"
 clap = { version = "3.1.6", features = ["derive"] }
-opencv = "0.63.0"
+opencv = { version = "0.63.0", features = ["clang-runtime"] }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 stdvis-core = { path = "../../stdvis/core" }

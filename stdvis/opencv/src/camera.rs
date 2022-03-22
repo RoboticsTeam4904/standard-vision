@@ -1,6 +1,3 @@
-#[cfg(test)]
-use png;
-
 use std::io;
 
 use ndarray::{ArrayViewD, ArrayViewMutD};
@@ -8,6 +5,13 @@ use opencv::{prelude::*, videoio::*};
 use stdvis_core::{
     traits::{Camera, ImageData},
     types::{CameraConfig, Image},
+};
+use v4l::{Control, Device};
+
+#[cfg(feature = "cuda")]
+use opencv::{
+    core::{GpuMat, Ptr, Stream},
+    cudacodec::{create_video_reader, VideoReader},
 };
 
 use crate::convert::AsArrayView;
@@ -42,42 +46,74 @@ impl ImageData for MatImageData {
     }
 }
 
-pub struct OpenCVCamera {
+pub struct OcvCamera {
     config: CameraConfig,
-    video_capture: VideoCapture,
+
+    device: Device,
+
+    #[cfg(not(any(feature = "cuda")))]
+    video_source: VideoCapture,
+
+    #[cfg(feature = "cuda")]
+    video_source: Ptr<dyn VideoReader>,
 }
 
-impl OpenCVCamera {
-    pub fn new(config: CameraConfig) -> opencv::Result<Self> {
+impl OcvCamera {
+    pub fn new(config: CameraConfig) -> io::Result<Self> {
+        // TODO: better error handling
+
         let id = config.id;
-        let video_capture = VideoCapture::new(id as i32, {
+        let device_path = format!("/dev/video{id}");
+
+        let device = Device::with_path(&device_path)?;
+
+        #[cfg(not(any(feature = "cuda")))]
+        let video_source = VideoCapture::new(id as i32, {
             if cfg!(target_os = "linux") {
                 CAP_V4L
             } else {
                 CAP_ANY
             }
-        })?;
+        })
+        .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
-        // video_capture.set(CAP_PROP_FRAME_WIDTH, config.resolution.0 as f64)?;
-        // video_capture.set(CAP_PROP_FRAME_HEIGHT, config.resolution.1 as f64)?;
+        #[cfg(feature = "cuda")]
+        let video_source = create_video_reader(&format!("/dev/video{}", id), false)
+            .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
         Ok(Self {
+            device,
             config,
-            video_capture,
+            video_source,
         })
     }
 
-    pub fn exposure(&self) -> opencv::Result<f64> {
-        self.video_capture.get(CAP_PROP_EXPOSURE)
+    pub fn exposure(&self) -> io::Result<i32> {
+        use v4l::v4l_sys::V4L2_CID_EXPOSURE;
+
+        match self.device.control(V4L2_CID_EXPOSURE)? {
+            Control::Value(exposure) => Ok(exposure),
+            _ => panic!("unexpected control type"),
+        }
     }
 
-    pub fn set_exposure(&mut self, exposure: f64) -> opencv::Result<bool> {
-        self.video_capture.set(CAP_PROP_AUTO_EXPOSURE, 1.)?;
-        self.video_capture.set(CAP_PROP_EXPOSURE, exposure)
+    pub fn set_exposure(&mut self, exposure: i32) -> io::Result<()> {
+        use v4l::v4l_sys::{
+            v4l2_exposure_auto_type_V4L2_EXPOSURE_MANUAL, V4L2_CID_EXPOSURE, V4L2_CID_EXPOSURE_AUTO,
+        };
+
+        self.device.set_control(
+            V4L2_CID_EXPOSURE_AUTO,
+            Control::Value(v4l2_exposure_auto_type_V4L2_EXPOSURE_MANUAL as i32),
+        )?;
+        self.device
+            .set_control(V4L2_CID_EXPOSURE, Control::Value(exposure))?;
+
+        Ok(())
     }
 }
 
-impl Camera for OpenCVCamera {
+impl Camera for OcvCamera {
     type ImageStorage = MatImageData;
 
     fn config(&self) -> &CameraConfig {
@@ -86,7 +122,23 @@ impl Camera for OpenCVCamera {
 
     fn grab_frame(&mut self) -> io::Result<Image<Self::ImageStorage>> {
         let mut mat = Mat::default();
-        if !self.video_capture.read(&mut mat).unwrap() {
+
+        #[cfg(feature = "cuda")]
+        let mut gpu_mat = GpuMat::default().expect("initializing GpuMat");
+
+        #[cfg(not(any(feature = "cuda")))]
+        let success = self
+            .video_source
+            .read(&mut mat)
+            .expect("reading from VideoCapture");
+
+        #[cfg(feature = "cuda")]
+        let success = self
+            .video_source
+            .next_frame(&mut gpu_mat, &mut Stream::null().unwrap())
+            .expect("reading from VideoReader");
+
+        if !success {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 format!(
@@ -95,6 +147,13 @@ impl Camera for OpenCVCamera {
                 ),
             ));
         }
+
+        #[cfg(feature = "cuda")]
+        gpu_mat
+            .download(&mut mat)
+            .expect("downloading GpuMat to Mat");
+
+        // TODO: timestamp should be taken between grab() and retrieve() calls
 
         Ok(Image::new(
             std::time::Instant::now(),
@@ -106,14 +165,15 @@ impl Camera for OpenCVCamera {
 
 #[cfg(test)]
 mod tests {
+    use std::fs::File;
+
+    use ndarray::s;
+    use opencv::{core::Vec3b, imgcodecs};
+
     use super::*;
 
     #[test]
     fn test_mat_pixel_extraction() {
-        use ndarray::s;
-        use opencv::{core::Vec3b, imgcodecs};
-        use std::fs::File;
-
         use crate::convert::AsMatView;
 
         const PATH: &str = "tests/images/rand.png";

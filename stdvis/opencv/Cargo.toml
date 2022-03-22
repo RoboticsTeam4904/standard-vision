@@ -4,10 +4,14 @@ version = "0.1.0"
 authors = []
 edition = "2021"
 
+[features]
+cuda = []
+
 [dependencies]
 stdvis-core = { path = "../core" }
 ndarray = "0.13.0"
-opencv = "0.63.0"
+opencv = { version = "0.63.0", features = ["clang-runtime"] }
+v4l = "0.12.1"
 
 [dev-dependencies]
 png = "^0.15.2"

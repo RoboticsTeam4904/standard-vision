@@ -9,7 +9,7 @@ use stdvis_core::{
     traits::Camera,
     types::{CameraConfig, VisionTarget},
 };
-use stdvis_opencv::{camera::OpenCVCamera, convert::AsMatView};
+use stdvis_opencv::{camera::OcvCamera, convert::AsMatView};
 
 #[derive(Default, Serialize, Deserialize)]
 struct Params {
@@ -28,7 +28,7 @@ struct ImageMetadata {
     index: usize,
     label: String,
     config: CameraConfig,
-    exposure: f64,
+    exposure: i32,
 }
 
 #[derive(Debug, Parser)]
@@ -88,7 +88,7 @@ impl Sample {
             }
         };
 
-        let mut camera = OpenCVCamera::new(params.camera).unwrap();
+        let mut camera = OcvCamera::new(params.camera).unwrap();
         let camera_config = camera.config().clone();
 
         use std::thread;
@@ -112,7 +112,8 @@ impl Sample {
             serde_json::from_str(&metadata_str).unwrap_or(Metadata { images: Vec::new() });
 
         for idx in 0..10 {
-            camera.set_exposure(-(idx as f64) * 0.1).unwrap();
+            // TODO: scale exposure based on min and max (and add configurability)
+            camera.set_exposure(idx * 20).unwrap();
 
             let frame = camera.grab_frame().unwrap();
             let image_mat = frame.as_mat_view();
