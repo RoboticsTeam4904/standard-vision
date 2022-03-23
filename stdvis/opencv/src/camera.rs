@@ -100,9 +100,9 @@ impl OcvCamera {
     }
 
     pub fn exposure(&self) -> io::Result<i32> {
-        use v4l::v4l_sys::V4L2_CID_EXPOSURE;
+        use v4l::v4l_sys::V4L2_CID_EXPOSURE_ABSOLUTE;
 
-        match self.device.control(V4L2_CID_EXPOSURE)? {
+        match self.device.control(V4L2_CID_EXPOSURE_ABSOLUTE)? {
             Control::Value(exposure) => Ok(exposure),
             _ => panic!("unexpected control type"),
         }
@@ -110,7 +110,8 @@ impl OcvCamera {
 
     pub fn set_exposure(&mut self, exposure: i32) -> io::Result<()> {
         use v4l::v4l_sys::{
-            v4l2_exposure_auto_type_V4L2_EXPOSURE_MANUAL, V4L2_CID_EXPOSURE, V4L2_CID_EXPOSURE_AUTO,
+            v4l2_exposure_auto_type_V4L2_EXPOSURE_MANUAL, V4L2_CID_EXPOSURE_ABSOLUTE,
+            V4L2_CID_EXPOSURE_AUTO,
         };
 
         self.device.set_control(
@@ -118,7 +119,7 @@ impl OcvCamera {
             Control::Value(v4l2_exposure_auto_type_V4L2_EXPOSURE_MANUAL as i32),
         )?;
         self.device
-            .set_control(V4L2_CID_EXPOSURE, Control::Value(exposure))?;
+            .set_control(V4L2_CID_EXPOSURE_ABSOLUTE, Control::Value(exposure))?;
 
         Ok(())
     }
