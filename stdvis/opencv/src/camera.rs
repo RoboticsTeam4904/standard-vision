@@ -1,7 +1,7 @@
 use std::io;
 
 use ndarray::{ArrayViewD, ArrayViewMutD};
-use opencv::{prelude::*, videoio::*};
+use opencv::{core::Vector, prelude::*, videoio::*};
 use stdvis_core::{
     traits::{Camera, ImageData},
     types::{CameraConfig, Image},
@@ -67,18 +67,29 @@ impl OcvCamera {
 
         let device = Device::with_path(&device_path)?;
 
+        let params = &[
+            CAP_PROP_FRAME_WIDTH,
+            config.resolution.0 as i32,
+            CAP_PROP_FRAME_HEIGHT,
+            config.resolution.1 as i32,
+        ];
+
         #[cfg(not(any(feature = "cuda")))]
-        let video_source = VideoCapture::new(id as i32, {
-            if cfg!(target_os = "linux") {
-                CAP_V4L
-            } else {
-                CAP_ANY
-            }
-        })
+        let video_source = VideoCapture::new_with_params(
+            id as i32,
+            {
+                if cfg!(target_os = "linux") {
+                    CAP_V4L
+                } else {
+                    CAP_ANY
+                }
+            },
+            &Vector::from_slice(params),
+        )
         .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
         #[cfg(feature = "cuda")]
-        let video_source = create_video_reader(&device_path, false)
+        let video_source = create_video_reader(&device_path, &Vector::from_slice(params), false)
             .map_err(|err| io::Error::new(io::ErrorKind::Other, err))?;
 
         Ok(Self {
